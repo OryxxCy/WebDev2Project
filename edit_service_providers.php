@@ -1,7 +1,6 @@
 <?php
 
 require('connect.php');
-
 session_start();
 
 if (!isset($_SESSION['userName'])) {
@@ -70,40 +69,51 @@ if ($_POST && isset($_GET['id'])) {
 </head>
 <body>
     <div id="container">
-    <?php include('adminNavigation.php')?>
-        <ul id="menu">
-            <li><a href="admin.php">Back</a></li>
-            <li><a href="create_service_providers.php">Create New</a></li>
-        </ul>
-        <div>
-        <form method="post">
-            <p>
+        <?php if($_SESSION['type'] == 'admin' || $_SESSION['Id'] == $id):?>
+            <?php if($_SESSION['type'] == 'admin'):?>
+                <?php include('adminNavigation.php')?>
+                    <ul id="menu">
+                        <li><a href="admin.php">Back</a></li>
+                        <li><a href="create_services.php">Create New</a></li>
+                    </ul>
+            <?php else:?>
+                <?php include('navigation.php')?>
+                    <ul id="menu">
+                        <li><a href="serviceProvider.php?id=<?=$id?>">Back</a></li>
+                    </ul>
+            <?php endif?> 
+            <div>
+            <form method="post">
                 <p>
-                <label for="name">Service Provider Name</label>
-                <input name="name" id="name" value="<?= $row['name']?>">
+                    <p>
+                    <label for="name">Service Provider Name</label>
+                    <input name="name" id="name" value="<?= $row['name']?>">
+                    </p>
+                    <p>
+                    <label for="description">Description</label>
+                    <textarea name="description" id="description"><?= $row['description']?></textarea>
+                    </p>
+                    <p>
+                    <label for="location">Location</label>
+                    <input name="location" id="location" value="<?= $row['location']?>">
+                    </p>
+                    <p>
+                    <label for="phoneNumber">Phone Number</label>
+                    <input name="phoneNumber" id="phoneNumber" value="<?= $row['phone_Number']?>">
+                    </p>
+                    <p>
+                    <label for="email">Email Address</label>
+                    <input name="email" id="email" value="<?= $row['email_Address']?>">
+                    </p>
+                    <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                    <input type="submit" name="command" value="Update">
+                    <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this?')">
                 </p>
-                <p>
-                <label for="description">Description</label>
-                <textarea name="description" id="description"><?= $row['description']?></textarea>
-                </p>
-                <p>
-                <label for="location">Location</label>
-                <input name="location" id="location" value="<?= $row['location']?>">
-                </p>
-                <p>
-                <label for="phoneNumber">Phone Number</label>
-                <input name="phoneNumber" id="phoneNumber" value="<?= $row['phone_Number']?>">
-                </p>
-                <p>
-                <label for="email">Email Address</label>
-                <input name="email" id="email" value="<?= $row['email_Address']?>">
-                </p>
-                <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                <input type="submit" name="command" value="Update">
-                <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this?')">
-            </p>
-        </form>
-        </div>  
+            </form>
+            </div>  
+        <?php else:?>   
+            <h2>Only admin and <?= $row['name']?> account owner can access this page.</h2> 
+        <?php endif?>     
     </div>  
 </body>
 </html>

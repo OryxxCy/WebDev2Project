@@ -1,7 +1,6 @@
 <?php
 
 require('connect.php');
-
 session_start();
 
 if (!isset($_SESSION['userName'])) {
@@ -84,7 +83,7 @@ if ($_POST && isset($_GET['id'])) {
                 </p>
                 <p>
                 <label for="type">Type</label>
-                <input name="type" id="type" value="<?= $row['type']?>">
+                <input type="password" name="type" id="type" value="<?= $row['type']?>">
                 </p>
                 <input type="hidden" name="id" value="<?= $row['id'] ?>">
                 <input type="submit" name="command" value="Update">

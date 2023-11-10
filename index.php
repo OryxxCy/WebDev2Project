@@ -1,6 +1,7 @@
 <?php
 
 require('connect.php');
+session_start();
 
 $query = "SELECT * FROM services";
 $statement = $db->prepare($query);

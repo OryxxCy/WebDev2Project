@@ -30,9 +30,16 @@ if ($_POST) {
         }else{
             $_SESSION['userName'] = $userName;
             if($row['type'] == 'admin'){
+                $_SESSION['type'] = $row['type'];
                 header('Location: admin.php'); 
-            }else{
-                $message = "Only admins can access this page.";
+            }else if ($row['type'] == 'service provider'){
+                $_SESSION['type'] = $row['type'];
+                $_SESSION['Id'] = $row['service_Provider_Id'];
+                header('Location: serviceProvider.php?id=' . $row['service_Provider_Id']);
+            }else if ($row['type'] == 'customer'){
+                $_SESSION['type'] = $row['type'];
+                $_SESSION['Id'] = $row['service_Provider_Id'];
+                header('Location: serviceProvider.php?id=' . $row['service_Provider_Id']); 
             }
         }
     }
@@ -49,14 +56,18 @@ if ($_POST) {
     <title>Login</title>
 </head>
 <body>
-    <h2>Login</h2>
-    <form method="post">
-        <label for="userName">Username:</label>
-        <input type="text" name="userName">
-        <label for="password">Password:</label>
-        <input type="password" name="password">
-        <input type="submit" value="Login">
-        <p><?= $message?></p>
-    </form>
+    <?php if(!isset($_SESSION['userName'])):?>
+        <h2>Login</h2>
+        <form method="post">
+            <label for="userName">Username:</label>
+            <input type="text" name="userName">
+            <label for="password">Password:</label>
+            <input type="password" name="password">
+            <input type="submit" value="Login">
+            <p><?= $message?></p>
+        </form>
+    <?php else:?>
+        <h2>You are already login as <?= ($_SESSION['userName'])?></h2>
+    <?php endif ?>
 </body>
 </html>

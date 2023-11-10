@@ -53,29 +53,33 @@ if(isset($_GET['table'])){
 </head>
 <body>
 <div id="container">
-<?php include('adminNavigation.php')?>
-<div id="content">
-    <h2>Your are login as <?= $_SESSION['userName']?></h2>
-    <a href="logout.php">logout</a>
-    <div id="services">
-        <section class="searchBar">
-            <h2><?=$table?></h2>
-            <form method="post">
-                <input type="text" name="servicesSearchTerm" placeholder="Search for a service">
-                <button type="submit" name="servicesSearchButton">Search</button>
-            </form>
-        </section>
-        <a href="create_<?=$table?>.php">Create new</a>
-        <section>
-            <form method="post">
-                <?php while($row = $statement->fetch()): ?>
-                    <p><?=$row[$columnSearch]?></p>
-                    <a href="edit_<?=$table?>.php?id=<?=$row['id']?>">Edit or Delete</a>
-                <?php endwhile ?>
-            </form>   
-        </section>
+    <?php if($_SESSION['type'] == 'admin'):?>
+    <?php include('adminNavigation.php')?>
+    <div id="content">
+        <h2>Your are login as <?= $_SESSION['userName']?></h2>
+        <a href="logout.php">logout</a>
+        <div id="services">
+            <section class="searchBar">
+                <h2><?=$table?></h2>
+                <form method="post">
+                    <input type="text" name="servicesSearchTerm" placeholder="Search for a service">
+                    <button type="submit" name="servicesSearchButton">Search</button>
+                </form>
+            </section>
+            <a href="create_<?=$table?>.php">Create new</a>
+            <section>
+                <form method="post">
+                    <?php while($row = $statement->fetch()): ?>
+                        <p><?=$row[$columnSearch]?></p>
+                        <a href="edit_<?=$table?>.php?id=<?=$row['id']?>">Edit or Delete</a>
+                    <?php endwhile ?>
+                </form>   
+            </section>
+        </div>
     </div>
-</div>
+    <?php else:?>
+        <h2>Only admins can access this page.</h2>
+    <?php endif?>
 </div>
 </body>
 </html>
