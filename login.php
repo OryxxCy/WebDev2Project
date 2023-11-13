@@ -38,14 +38,13 @@ if ($_POST) {
                 header('Location: serviceProvider.php?id=' . $row['service_Provider_Id']);
             }else if ($row['type'] == 'customer'){
                 $_SESSION['type'] = $row['type'];
-                $_SESSION['Id'] = $row['service_Provider_Id'];
-                header('Location: serviceProvider.php?id=' . $row['service_Provider_Id']); 
+                $_SESSION['Id'] = $row['customer_Id'];
+                header('Location: customer.php?id=' . $row['customer_Id']); 
             }
         }
     }
 }
 ?>
-
 
 <!DOCTYPE html>
 <html>
