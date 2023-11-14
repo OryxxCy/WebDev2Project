@@ -2,7 +2,7 @@
 
 $loginAction = "login.php";
 $loginButtonMessage = "Login";
-$registerAction = "#";
+$registerAction = "register.php";
 $registerMessage = "Register";
 
 if(isset($_SESSION['userName'])){
