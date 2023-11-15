@@ -33,7 +33,7 @@ if ($_POST) {
             $id = $db->lastInsertId();
             $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-            $type = "service provider"
+            $type = "service provider";
 
             $query = "INSERT INTO accounts (user_Name, password, type, service_Provider_Id) VALUES (:userName, :password, :type, :id)";
             $statement = $db->prepare($query);
@@ -69,8 +69,12 @@ if ($_POST) {
 </head>
 <body>
     <div id="container">
-    <?php include('adminNavigation.php')?>
-    <a href="admin.php">Back</a>
+    <?php if(isset($_SESSION['userName'])):?>
+        <?php include('adminNavigation.php')?>
+        <a href="admin.php">Back</a>
+    <?php else:?>
+        <a href="index.php">Back</a>
+    <?php endif?>
         <div>
             <form method="post">
                 <fieldset>
@@ -110,7 +114,6 @@ if ($_POST) {
                 <p>
                 <input type="submit" value="Create">
                 </p>
-                <h3><?= $errorMessage?></h3>
                 </fieldset>
             </form>
         </div>

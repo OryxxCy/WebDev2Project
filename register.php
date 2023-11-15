@@ -1,14 +1,3 @@
-<?php
-require('connect.php');
-session_start();
-
-if($_POST['type'] == "serviceProvider"){
-     header("Location: create_service_providers.php");
-}else{
-    header("Location: create_customers.php");
-}
-
-?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -21,8 +10,8 @@ if($_POST['type'] == "serviceProvider"){
     <div id="container">
         <h3>What account would you like to create</h3>
             <form method="post">
-            <input type="submit" name="type" value="serviceProvider">
-            <input type="submit" name="type" value="customer">
+            <a href="create_service_providers.php">Service Provider</a>
+            <a href="create_customers.php">Customer</a>
             </form>
     </div>   
 </body>

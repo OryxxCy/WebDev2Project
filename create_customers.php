@@ -7,7 +7,7 @@ if (isset($_SESSION['userName'])) {
     if($_SESSION['type'] != 'admin'){
         header('Location: login.php');
         exit();
-    } 
+    }
 }
 
 if ($_POST) {
@@ -27,9 +27,9 @@ if ($_POST) {
             $id = $db->lastInsertId();
             $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
-            $type = "customer"
+            $type = "customer";
 
-            $query = "INSERT INTO accounts (user_Name, password, type, customer_Id) VALUES (:userName, :password, :type, :id)";
+            $query = "INSERT INTO accounts (user_Name, password, type, service_Provider_Id, customer_Id) VALUES (:userName, :password, :type, :id)";
             $statement = $db->prepare($query);
 
             $statement->bindValue(":userName", $userName);
@@ -63,8 +63,12 @@ if ($_POST) {
 </head>
 <body>
     <div id="container">
-    <?php include('adminNavigation.php')?>
-    <a href="admin.php">Back</a>
+    <?php if(isset($_SESSION['userName'])):?>
+        <?php include('adminNavigation.php')?>
+        <a href="admin.php">Back</a>
+    <?php else:?>
+        <a href="index.php">Back</a>
+    <?php endif?>
         <div>
             <form method="post">
                 <h2>New Customer</h2>
@@ -75,6 +79,18 @@ if ($_POST) {
                 <p>
                 <label for="phoneNumber">Phone number</label>
                 <input name="phoneNumber" id="phoneNumber">
+                </p>
+                <p>
+                <label for="userName">User Name</label>
+                <input name="userName" id="userName">
+                </p>
+                <p>
+                <label for="password">Password</label>
+                <input name="password" id="password" type="password">
+                </p>
+                <p>
+                <label for="confirmPassword">Confirm Password</label>
+                <input name="confirmPassword" id="confirmPassword" type="password">
                 </p>
                 <p>
                 <input type="submit" value="Create">
