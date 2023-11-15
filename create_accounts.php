@@ -13,7 +13,7 @@ if (!isset($_SESSION['userName'])) {
             header("Location: error.php");
         }else{
              $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-             $password = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+             $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
              $type = filter_input(INPUT_POST, 'type', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
              $query = "INSERT INTO accounts (user_Name, password, type) VALUES (:userName, :password, :type)";

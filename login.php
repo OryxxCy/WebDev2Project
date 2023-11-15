@@ -19,15 +19,8 @@ if ($_POST) {
     if($row == false){
         $message = "Incorrect username";
     }else{      
-        $query = "SELECT * FROM accounts WHERE password LIKE :password";
-        $statement = $db->prepare($query);
-        $statement->bindValue(':password', $password);
-        $statement->execute();
-        $row = $statement->fetch();
-        
-        if($row == false){
-            $message = "Incorrect password";
-        }else{
+        if(password_verify($password, $row['password']))
+        {
             $_SESSION['userName'] = $userName;
             if($row['type'] == 'admin'){
                 $_SESSION['type'] = $row['type'];
@@ -41,6 +34,8 @@ if ($_POST) {
                 $_SESSION['Id'] = $row['customer_Id'];
                 header('Location: customer.php?id=' . $row['customer_Id']); 
             }
+        }else{
+            $message = "Incorrect password";
         }
     }
 }
