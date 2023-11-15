@@ -51,7 +51,7 @@ if (!isset($_SESSION['userName'])) {
                 </p>
                 <p>
                 <label for="password">Password</label>
-                <input name="password" id="password">
+                <input type="password"  name="password" id="password">
                 </p>
                 <p>
                 <label for="type">Type</label>

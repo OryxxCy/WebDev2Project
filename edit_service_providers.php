@@ -32,17 +32,33 @@ if ($_POST && isset($_GET['id'])) {
            
             $statement->execute();
 
-            header("Location: admin.php?table=service_providers&column=name");
+            if($_SESSION['type'] == 'admin')
+            {
+                header("Location: admin.php?table=service_providers&column=name");
+            }else{
+                header("Location: serviceProvider.php?id=" . $id);
+            }
         }
     }else{
         $query = "DELETE FROM service_providers WHERE id = :id LIMIT 1";
 
         $statement = $db->prepare($query);
         $statement->bindValue(':id', $id, PDO::PARAM_INT);
-
         $statement->execute();
 
-        header("Location: admin.php?table=service_providers&column=name");
+        $query = "DELETE FROM accounts WHERE service_Provider_Id = :id LIMIT 1";
+
+        $statement = $db->prepare($query);
+        $statement->bindValue(':id', $id, PDO::PARAM_INT);
+        $statement->execute();
+
+        if($_SESSION['type'] == 'admin')
+        {
+            header("Location: admin.php?table=service_providers&column=name");
+        }else{
+            session_destroy();
+            header('Location: index.php');
+        }
     }
 } else if (isset($_GET['id'])) { 
     if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT)){
@@ -53,7 +69,12 @@ if ($_POST && isset($_GET['id'])) {
         $statement->execute();
         $row = $statement->fetch();
     }else{
-        header("Location: admin.php?table=service_providers&column=name");
+        if($_SESSION['type'] == 'admin')
+        {
+            header("Location: admin.php?table=service_providers&column=name");
+        }else{
+            header('Location: index.php');
+        }
     }
 } 
 ?>
@@ -107,7 +128,7 @@ if ($_POST && isset($_GET['id'])) {
                     </p>
                     <input type="hidden" name="id" value="<?= $row['id'] ?>">
                     <input type="submit" name="command" value="Update">
-                    <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this?')">
+                    <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this? This will also delete the account associated to it.')">
                 </p>
             </form>
             </div>  

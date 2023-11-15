@@ -12,9 +12,10 @@ if(isset($_SESSION['userName'])){
 
     if($_SESSION['type'] == 'service provider'){
         $registerAction = "serviceProvider.php?id=" . $_SESSION['Id'];
-    }
-    if($_SESSION['type'] == 'customer'){
+    }else if($_SESSION['type'] == 'customer'){
         $registerAction = "customer.php?id=" . $_SESSION['Id'];
+    }else{
+        $registerAction = "admin.php";
     }
 }
 

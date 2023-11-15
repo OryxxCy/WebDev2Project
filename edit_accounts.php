@@ -79,11 +79,11 @@ if ($_POST && isset($_GET['id'])) {
                 </p>
                 <p>
                 <label for="password">Password</label>
-                <input name="password" id="password" value="<?= $row['password']?>">
+                <input type="password"  name="password" id="password" value="<?= $row['password']?>">
                 </p>
                 <p>
                 <label for="type">Type</label>
-                <input type="password" name="type" id="type" value="<?= $row['type']?>">
+                <input name="type" id="type" value="<?= $row['type']?>">
                 </p>
                 <input type="hidden" name="id" value="<?= $row['id'] ?>">
                 <input type="submit" name="command" value="Update">

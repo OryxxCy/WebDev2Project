@@ -55,6 +55,7 @@ if ($_POST) {
     <title>Login</title>
 </head>
 <body>
+<?php include('navigation.php')?>
     <?php if(!isset($_SESSION['userName'])):?>
         <h2>Login</h2>
         <form method="post">

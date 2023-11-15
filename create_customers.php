@@ -3,29 +3,54 @@
 require('connect.php');
 session_start();
 
-if (!isset($_SESSION['userName'])) {
-    header('Location: login.php');
-    exit();
+if (isset($_SESSION['userName'])) {
+    if($_SESSION['type'] != 'admin'){
+        header('Location: login.php');
+        exit();
+    } 
 }
 
-    if ($_POST) {
-        if (trim($_POST['name']) == null) {
-            header("Location: error.php");
-        }else{
-             $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-             $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+if ($_POST) {
+    if (trim($_POST['name']) == null) {
+        header("Location: error.php");
+    }else{
+            $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-             $query = "INSERT INTO customers (name, phone_Number) VALUES (:name, :phoneNumber)";
-             $statement = $db->prepare($query);
+            $query = "INSERT INTO customers (name, phone_Number) VALUES (:name, :phoneNumber)";
+            $statement = $db->prepare($query);
 
-             $statement->bindValue(":name", $name);
-             $statement->bindValue(":phoneNumber", $phoneNumber);
-             
+            $statement->bindValue(":name", $name);
+            $statement->bindValue(":phoneNumber", $phoneNumber);
+            
+        if($statement->execute()){
+            $id = $db->lastInsertId();
+            $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            $type = "customer"
+
+            $query = "INSERT INTO accounts (user_Name, password, type, customer_Id) VALUES (:userName, :password, :type, :id)";
+            $statement = $db->prepare($query);
+
+            $statement->bindValue(":userName", $userName);
+            $statement->bindValue(":password", $password);
+            $statement->bindValue(":type", $type);
+            $statement->bindValue(":id", $id);
+
             if($statement->execute()){
-                 header("Location: admin.php?table=customers&column=name");
+                if($_SESSION['type'] == 'admin')
+                {
+                    header("Location: admin.php?table=customers&column=name");
+                }else{
+                    $_SESSION['userName'] = $userName;
+                    $_SESSION['type'] = $type;
+                    $_SESSION['Id'] = $id;
+                    header('Location: customer.php?id=' . $id);
+                }       
             }
         }
     }
+}
 ?>
 
 <!DOCTYPE html>

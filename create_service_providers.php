@@ -3,35 +3,60 @@
 require('connect.php');
 session_start();
 
-if (!isset($_SESSION['userName'])) {
-    header('Location: login.php');
-    exit();
+if (isset($_SESSION['userName'])) {
+    if($_SESSION['type'] != 'admin'){
+        header('Location: login.php');
+        exit();
+    } 
 }
 
-    if ($_POST) {
-        if (trim($_POST['name']) == null || trim($_POST['description']) == null) {
-            header("Location: error.php");
-        }else{
-             $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-             $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-             $location = filter_input(INPUT_POST, 'location', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-             $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-             $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-  
-             $query = "INSERT INTO service_providers (name, description, location, phone_Number, email_Address) VALUES (:name, :description, :location, :phone_Number, :email_Address)";
-             $statement = $db->prepare($query);
+if ($_POST) {
+    if (trim($_POST['name']) == null || trim($_POST['description']) == null) {
+        header("Location: error.php");
+    }else{
+            $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $location = filter_input(INPUT_POST, 'location', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-             $statement->bindValue(":name", $name);
-             $statement->bindValue(":description", $description);
-             $statement->bindValue(":location", $location);
-             $statement->bindValue(":phone_Number", $phoneNumber);
-             $statement->bindValue(":email_Address", $email);
-             
+            $query = "INSERT INTO service_providers (name, description, location, phone_Number, email_Address) VALUES (:name, :description, :location, :phone_Number, :email_Address)";
+            $statement = $db->prepare($query);
+
+            $statement->bindValue(":name", $name);
+            $statement->bindValue(":description", $description);
+            $statement->bindValue(":location", $location);
+            $statement->bindValue(":phone_Number", $phoneNumber);
+            $statement->bindValue(":email_Address", $email);
+
+        if($statement->execute()){
+            $id = $db->lastInsertId();
+            $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            $type = "service provider"
+
+            $query = "INSERT INTO accounts (user_Name, password, type, service_Provider_Id) VALUES (:userName, :password, :type, :id)";
+            $statement = $db->prepare($query);
+
+            $statement->bindValue(":userName", $userName);
+            $statement->bindValue(":password", $password);
+            $statement->bindValue(":type", $type);
+            $statement->bindValue(":id", $id);
+
             if($statement->execute()){
-                 header("Location: admin.php?table=service_providers&column=name");
+                if($_SESSION['type'] == 'admin')
+                {
+                    header("Location: admin.php?table=service_providers&column=name");
+                }else{
+                    $_SESSION['userName'] = $userName;
+                    $_SESSION['type'] = $type;
+                    $_SESSION['Id'] = $id;
+                    header('Location: serviceProvider.php?id=' . $id);
+                }       
             }
         }
     }
+}
 ?>
 
 <!DOCTYPE html>
@@ -71,8 +96,21 @@ if (!isset($_SESSION['userName'])) {
                 <input name="email" id="email">
                 </p>
                 <p>
+                <label for="userName">User Name</label>
+                <input name="userName" id="userName">
+                </p>
+                <p>
+                <label for="password">Password</label>
+                <input name="password" id="password" type="password">
+                </p>
+                <p>
+                <label for="confirmPassword">Confirm Password</label>
+                <input name="confirmPassword" id="confirmPassword" type="password">
+                </p>
+                <p>
                 <input type="submit" value="Create">
                 </p>
+                <h3><?= $errorMessage?></h3>
                 </fieldset>
             </form>
         </div>
