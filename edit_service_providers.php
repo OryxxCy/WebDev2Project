@@ -8,7 +8,9 @@ if (!isset($_SESSION['userName'])) {
     exit();
 }
 
+$userNameError = "";
 $passwordError = "";
+$noError = true;
 
 if (isset($_GET['id'])) { 
     if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT)){
@@ -44,9 +46,31 @@ if ($_POST && isset($_GET['id'])) {
     $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
     if($_POST['command'] == 'Update'){
-        if ($_POST['password'] !=  $_POST['confirmPassword']) {
+        $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+        $query = "SELECT * FROM accounts WHERE user_Name = :userName";
+        $statement = $db->prepare($query);
+        $statement->bindValue(':userName', $userName);
+        $statement->execute();
+        $unavailableAccount = $statement->fetch();
+    
+        if(trim($_POST['password']) == null || trim($_POST['confirmPassword']) == null){
+            $passwordError = "Do not leave the password empty.";
+            $noError = false;
+        }else if($_POST['password'] !=  $_POST['confirmPassword']) {
             $passwordError = "The passwords do not match.";
-        }else{
+            $noError = false;
+        }
+    
+        if(trim($_POST['userName']) == ''){
+            $userNameError = "Please dont leave the username empty.";
+            $noError = false;
+        }else if($unavailableAccount && $accountsRow['user_Name'] != $userName){
+            $userNameError = "Username is taken please select a different one.";
+            $noError = false;
+        }
+        
+        if($noError){
             $query = "UPDATE service_providers SET name = :name, description = :description, location = :location, phone_Number = :phone_Number, email_Address = :email_Address WHERE id = :id";
     
             $statement = $db->prepare($query);
@@ -58,7 +82,6 @@ if ($_POST && isset($_GET['id'])) {
             $statement->bindValue(":email_Address", $email);
            
             if($statement->execute()){
-                $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
                 $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
    
                 $query = "UPDATE accounts SET user_Name = :userName, password = :password WHERE service_Provider_Id = :id";
@@ -67,7 +90,10 @@ if ($_POST && isset($_GET['id'])) {
                 $statement->bindValue(":userName", $userName);
                 $statement->bindValue(":password", $password);
                 $statement->bindValue(":id", $id);
-                $statement->execute();
+                
+                if($statement->execute()){
+                    $_SESSION['userName'] = $userName;
+                }
             }
     
             if($_SESSION['type'] == 'admin')
@@ -149,6 +175,7 @@ if ($_POST && isset($_GET['id'])) {
                         <label for="userName">User Name</label>
                         <input name="userName" id="userName" value="<?= $accountsRow['user_Name']?>">
                         </p>
+                        <p class = "errorMessage"><?= $userNameError?></p>
                         <p>
                         <label for="password">Password</label>
                         <input name="password" id="password" type="password">
@@ -158,7 +185,7 @@ if ($_POST && isset($_GET['id'])) {
                         <label for="confirmPassword">Confirm Password</label>
                         <input name="confirmPassword" id="confirmPassword" type="password">
                         </p>
-                        <p><?= $passwordError?></p>
+                        <p class = "errorMessage"><?= $passwordError?></p>
                         <input type="hidden" name="id" value="<?= $row['id'] ?>">
                         <input type="submit" name="command" value="Update">
                         <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this? This will also delete the account associated to it.')">

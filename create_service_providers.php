@@ -10,12 +10,36 @@ if (isset($_SESSION['userName'])) {
     } 
 }
 
+$userNameError = "";
 $passwordError = "";
+$noError = true;
 
 if ($_POST) {
-    if ($_POST['password'] !=  $_POST['confirmPassword']) {
+    $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+    $query = "SELECT * FROM accounts WHERE user_Name = :userName";
+    $statement = $db->prepare($query);
+    $statement->bindValue(':userName', $userName);
+    $statement->execute();
+    $unavailableAccount = $statement->fetch();
+
+    if(trim($_POST['password']) == null || trim($_POST['confirmPassword']) == null){
+        $passwordError = "Do not leave the password empty.";
+        $noError = false;
+    }else if($_POST['password'] !=  $_POST['confirmPassword']) {
         $passwordError = "The passwords do not match.";
-    }else{
+        $noError = false;
+    }
+
+    if(trim($_POST['userName']) == ''){
+        $userNameError = "Please dont leave the username empty.";
+        $noError = false;
+    }else if($unavailableAccount){
+        $userNameError = "Username is taken please select a different one.";
+        $noError = false;
+    }
+    
+    if($noError){
             $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $location = filter_input(INPUT_POST, 'location', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -33,7 +57,6 @@ if ($_POST) {
 
         if($statement->execute()){
             $id = $db->lastInsertId();
-            $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
             $type = "service provider";
 
@@ -104,6 +127,7 @@ if ($_POST) {
                 <label for="userName">User Name</label>
                 <input name="userName" id="userName">
                 </p>
+                <p class = "errorMessage"><?= $userNameError?></p>
                 <p>
                 <label for="password">Password</label>
                 <input name="password" id="password" type="password">

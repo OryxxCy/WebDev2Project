@@ -10,10 +10,36 @@ if (isset($_SESSION['userName'])) {
     }
 }
 
+$userNameError = "";
+$passwordError = "";
+$noError = true;
+
 if ($_POST) {
-    if ($_POST['password'] !=  $_POST['confirmPassword']) {
+    $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+    $query = "SELECT * FROM accounts WHERE user_Name = :userName";
+    $statement = $db->prepare($query);
+    $statement->bindValue(':userName', $userName);
+    $statement->execute();
+    $unavailableAccount = $statement->fetch();
+
+    if(trim($_POST['password']) == null || trim($_POST['confirmPassword']) == null){
+        $passwordError = "Do not leave the password empty.";
+        $noError = false;
+    }else if($_POST['password'] !=  $_POST['confirmPassword']) {
         $passwordError = "The passwords do not match.";
-    }else{
+        $noError = false;
+    }
+
+    if(trim($_POST['userName']) == ''){
+        $userNameError = "Please dont leave the username empty.";
+        $noError = false;
+    }else if($unavailableAccount){
+        $userNameError = "Username is taken please select a different one.";
+        $noError = false;
+    }
+    
+    if($noError){
             $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
@@ -25,11 +51,10 @@ if ($_POST) {
             
         if($statement->execute()){
             $id = $db->lastInsertId();
-            $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
             $type = "customer";
 
-            $query = "INSERT INTO accounts (user_Name, password, type, service_Provider_Id, customer_Id) VALUES (:userName, :password, :type, :id)";
+            $query = "INSERT INTO accounts (user_Name, password, type, customer_Id) VALUES (:userName, :password, :type, :id)";
             $statement = $db->prepare($query);
 
             $statement->bindValue(":userName", $userName);
@@ -84,6 +109,7 @@ if ($_POST) {
                 <label for="userName">User Name</label>
                 <input name="userName" id="userName">
                 </p>
+                <p class = "errorMessage"><?= $userNameError?></p>
                 <p>
                 <label for="password">Password</label>
                 <input name="password" id="password" type="password">
@@ -92,6 +118,7 @@ if ($_POST) {
                 <label for="confirmPassword">Confirm Password</label>
                 <input name="confirmPassword" id="confirmPassword" type="password">
                 </p>
+                <p class = "errorMessage"><?= $passwordError?></p>
                 <p>
                 <input type="submit" value="Create">
                 </p>
