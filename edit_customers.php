@@ -8,6 +8,33 @@ if (!isset($_SESSION['userName'])) {
     exit();
 }
 
+$passwordError = "";
+
+if (isset($_GET['id'])) { 
+    if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT)){
+        $query = "SELECT * FROM customers WHERE id = :id";
+        $statement = $db->prepare($query);
+        $statement->bindValue(':id', $id, PDO::PARAM_INT);
+        
+        $statement->execute();
+        $row = $statement->fetch();
+
+        $accountsQuery = "SELECT * FROM accounts WHERE customer_Id = :id";
+        $accountsStatement = $db->prepare($accountsQuery);
+        $accountsStatement->bindValue(':id', $id, PDO::PARAM_INT);
+        
+        $accountsStatement->execute();
+        $accountsRow = $accountsStatement->fetch();
+    }else{
+        if($_SESSION['type'] == 'admin')
+        {
+            header("Location: admin.php?table=service_providers&column=name");
+        }else{
+            header('Location: index.php');
+        }
+    }
+} 
+
 if ($_POST && isset($_GET['id'])) {
     $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
     $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -24,7 +51,18 @@ if ($_POST && isset($_GET['id'])) {
             $statement->bindValue(":name", $name);
             $statement->bindValue(":phoneNumber", $phoneNumber);
            
-            $statement->execute();
+            if($statement->execute()){
+                $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+                $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+   
+                $query = "UPDATE accounts SET user_Name = :userName, password = :password WHERE customer_Id = :id";
+                $statement = $db->prepare($query);
+    
+                $statement->bindValue(":userName", $userName);
+                $statement->bindValue(":password", $password);
+                $statement->bindValue(":id", $id);
+                $statement->execute();
+            }
 
             if($_SESSION['type'] == 'admin')
             {
@@ -49,23 +87,7 @@ if ($_POST && isset($_GET['id'])) {
             header('Location: index.php');
         }
     }
-} else if (isset($_GET['id'])) { 
-    if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT)){
-        $query = "SELECT * FROM customers WHERE id = :id";
-        $statement = $db->prepare($query);
-        $statement->bindValue(':id', $id, PDO::PARAM_INT);
-        
-        $statement->execute();
-        $row = $statement->fetch();
-    }else{
-        if($_SESSION['type'] == 'admin')
-        {
-            header("Location: admin.php?table=service_providers&column=name");
-        }else{
-            header('Location: index.php');
-        }
-    }
-} 
+}
 ?>
 
 <!DOCTYPE html>
@@ -79,28 +101,51 @@ if ($_POST && isset($_GET['id'])) {
 </head>
 <body>
     <div id="container">
-    <?php include('adminNavigation.php')?>
-        <ul id="menu">
-            <li><a href="admin.php">Back</a></li>
-            <li><a href="create_customers.php">Create New</a></li>
-        </ul>
-        <div>
-        <form method="post">
-            <p>
+    <div class ="formBox">
+        <?php if($_SESSION['type'] == 'admin' || $_SESSION['Id'] == $id):?>
+            <?php if($_SESSION['type'] == 'admin'):?>
+                <ul id="menu">
+                    <li><a href="admin.php">Back</a></li>
+                    <li><a href="create_customers.php">Create New</a></li>
+                </ul>
+            <?php else:?>
+                <a href="customer.php?id=<?=$id?>">Back</a>
+            <?php endif?>    
+            <div>
+            <form method="post">
                 <p>
-                <label for="name">Customer Name</label>
-                <input name="name" id="name" value="<?= $row['name']?>">
+                    <p>
+                    <label for="name">Customer Name</label>
+                    <input name="name" id="name" value="<?= $row['name']?>">
+                    </p>
+                    <p>
+                    <label for="phoneNumber">Phone Number</label>
+                    <input name="phoneNumber" id="phoneNumber" value="<?= $row['phone_Number']?>">
+                    </p>
+                    <p>
+                    <label for="userName">User Name</label>
+                    <input name="userName" id="userName" value="<?= $accountsRow['user_Name']?>">
+                    </p>
+                    <p>
+                    <label for="password">Password</label>
+                    <input name="password" id="password" type="password">
+                    </p>
+                    </p>
+                    <p>
+                    <label for="confirmPassword">Confirm Password</label>
+                    <input name="confirmPassword" id="confirmPassword" type="password">
+                    </p>
+                    <p><?= $passwordError?></p>
+                    <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                    <input type="submit" name="command" value="Update">
+                    <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this? This will also delete the account associated to it.')">
                 </p>
-                <p>
-                <label for="phoneNumber">Phone Number</label>
-                <input name="phoneNumber" id="phoneNumber" value="<?= $row['phone_Number']?>">
-                </p>
-                <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                <input type="submit" name="command" value="Update">
-                <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this? This will also delete the account associated to it.')">
-            </p>
-        </form>
-        </div>  
+            </form>
+            </div>  
+            <?php else:?>   
+                <h2>Only admin and <?= $row['name']?> account owner can access this page.</h2> 
+            <?php endif?>    
     </div>  
+    </div>
 </body>
 </html>

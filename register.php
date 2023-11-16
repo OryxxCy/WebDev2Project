@@ -8,11 +8,13 @@
 </head>
 <body>
     <div id="container">
+        <div class = "formBox">
         <h3>What account would you like to create</h3>
             <form method="post">
             <a href="create_service_providers.php">Service Provider</a>
             <a href="create_customers.php">Customer</a>
             </form>
+        </div>
     </div>   
 </body>
 </html>

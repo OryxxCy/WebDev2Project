@@ -11,8 +11,8 @@ if (isset($_SESSION['userName'])) {
 }
 
 if ($_POST) {
-    if (trim($_POST['name']) == null) {
-        header("Location: error.php");
+    if ($_POST['password'] !=  $_POST['confirmPassword']) {
+        $passwordError = "The passwords do not match.";
     }else{
             $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
             $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -63,8 +63,8 @@ if ($_POST) {
 </head>
 <body>
     <div id="container">
+    <div class ="formBox">
     <?php if(isset($_SESSION['userName'])):?>
-        <?php include('adminNavigation.php')?>
         <a href="admin.php">Back</a>
     <?php else:?>
         <a href="index.php">Back</a>
@@ -97,6 +97,7 @@ if ($_POST) {
                 </p>
             </form>
         </div>
+    </div>
     </div>
 </body>
 </html>

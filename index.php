@@ -70,8 +70,7 @@ if (isset($_POST['serviceProvidersSearchButton'])) {
         </p>
         </section>
     </div>
-
-    <div id="services">
+    <div class="sectionBox">
         <section class="searchBar">
             <h2>Services</h2>
             <form method="post">
@@ -88,7 +87,7 @@ if (isset($_POST['serviceProvidersSearchButton'])) {
         </section>
     </div>
 
-    <div id="serviceProviders">
+    <div class="sectionBox">
         <section class="searchBar">
             <h2>Service Providers</h2>
             <form method="post">

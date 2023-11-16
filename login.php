@@ -50,19 +50,23 @@ if ($_POST) {
     <title>Login</title>
 </head>
 <body>
-<?php include('navigation.php')?>
-    <?php if(!isset($_SESSION['userName'])):?>
-        <h2>Login</h2>
-        <form method="post">
-            <label for="userName">Username:</label>
-            <input type="text" name="userName">
-            <label for="password">Password:</label>
-            <input type="password" name="password">
-            <input type="submit" value="Login">
-            <p><?= $message?></p>
-        </form>
-    <?php else:?>
-        <h2>You are already login as <?= ($_SESSION['userName'])?></h2>
-    <?php endif ?>
+<div id="container">
+    <div class ="formBox">
+    <a href="index.php">Back</a>
+            <?php if(!isset($_SESSION['userName'])):?>
+                <h2>Login</h2>
+                <form method="post">
+                    <label for="userName">Username:</label>
+                    <input type="text" name="userName">
+                    <label for="password">Password:</label>
+                    <input type="password" name="password">
+                    <input type="submit" value="Login">
+                    <p><?= $message?></p>
+                </form>
+            <?php else:?>
+                <h2>You are already login as <?= ($_SESSION['userName'])?></h2>
+            <?php endif ?>
+    </div>
+</div>    
 </body>
 </html>

@@ -8,6 +8,33 @@ if (!isset($_SESSION['userName'])) {
     exit();
 }
 
+$passwordError = "";
+
+if (isset($_GET['id'])) { 
+    if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT)){
+        $query = "SELECT * FROM service_providers WHERE id = :id";
+        $statement = $db->prepare($query);
+        $statement->bindValue(':id', $id, PDO::PARAM_INT);
+        
+        $statement->execute();
+        $row = $statement->fetch();
+
+        $accountsQuery = "SELECT * FROM accounts WHERE service_Provider_Id = :id";
+        $accountsStatement = $db->prepare($accountsQuery);
+        $accountsStatement->bindValue(':id', $id, PDO::PARAM_INT);
+        
+        $accountsStatement->execute();
+        $accountsRow = $accountsStatement->fetch();
+    }else{
+        if($_SESSION['type'] == 'admin')
+        {
+            header("Location: admin.php?table=service_providers&column=name");
+        }else{
+            header('Location: index.php');
+        }
+    }
+}
+
 if ($_POST && isset($_GET['id'])) {
     $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
     $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -17,8 +44,8 @@ if ($_POST && isset($_GET['id'])) {
     $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
     if($_POST['command'] == 'Update'){
-        if(trim($_POST['name']) == null || trim($_POST['description']) == null){
-            header("Location: error.php");
+        if ($_POST['password'] !=  $_POST['confirmPassword']) {
+            $passwordError = "The passwords do not match.";
         }else{
             $query = "UPDATE service_providers SET name = :name, description = :description, location = :location, phone_Number = :phone_Number, email_Address = :email_Address WHERE id = :id";
     
@@ -30,8 +57,19 @@ if ($_POST && isset($_GET['id'])) {
             $statement->bindValue(":phone_Number", $phoneNumber);
             $statement->bindValue(":email_Address", $email);
            
-            $statement->execute();
-
+            if($statement->execute()){
+                $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+                $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+   
+                $query = "UPDATE accounts SET user_Name = :userName, password = :password WHERE service_Provider_Id = :id";
+                $statement = $db->prepare($query);
+    
+                $statement->bindValue(":userName", $userName);
+                $statement->bindValue(":password", $password);
+                $statement->bindValue(":id", $id);
+                $statement->execute();
+            }
+    
             if($_SESSION['type'] == 'admin')
             {
                 header("Location: admin.php?table=service_providers&column=name");
@@ -60,22 +98,6 @@ if ($_POST && isset($_GET['id'])) {
             header('Location: index.php');
         }
     }
-} else if (isset($_GET['id'])) { 
-    if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT)){
-        $query = "SELECT * FROM service_providers WHERE id = :id";
-        $statement = $db->prepare($query);
-        $statement->bindValue(':id', $id, PDO::PARAM_INT);
-        
-        $statement->execute();
-        $row = $statement->fetch();
-    }else{
-        if($_SESSION['type'] == 'admin')
-        {
-            header("Location: admin.php?table=service_providers&column=name");
-        }else{
-            header('Location: index.php');
-        }
-    }
 } 
 ?>
 
@@ -90,51 +112,63 @@ if ($_POST && isset($_GET['id'])) {
 </head>
 <body>
     <div id="container">
-        <?php if($_SESSION['type'] == 'admin' || $_SESSION['Id'] == $id):?>
+        <div class ="formBox">
+        <?php if($_SESSION['type'] == 'admin' || ($_SESSION['type'] != 'customer' && $_SESSION['Id'] == $id)):?>
             <?php if($_SESSION['type'] == 'admin'):?>
-                <?php include('adminNavigation.php')?>
-                    <ul id="menu">
-                        <li><a href="admin.php">Back</a></li>
-                        <li><a href="create_services.php">Create New</a></li>
-                    </ul>
+                <ul id="menu">
+                    <li><a href="admin.php">Back</a></li>
+                    <li><a href="create_services.php">Create New</a></li>
+                </ul>
             <?php else:?>
-                <?php include('navigation.php')?>
-                    <ul id="menu">
-                        <li><a href="serviceProvider.php?id=<?=$id?>">Back</a></li>
-                    </ul>
+                <a href="serviceProvider.php?id=<?=$id?>">Back</a>
             <?php endif?> 
             <div>
-            <form method="post">
-                <p>
+                <form method="post">
                     <p>
-                    <label for="name">Service Provider Name</label>
-                    <input name="name" id="name" value="<?= $row['name']?>">
+                        <p>
+                        <label for="name">Service Provider Name</label>
+                        <input name="name" id="name" value="<?= $row['name']?>">
+                        </p>
+                        <p>
+                        <label for="description">Description</label>
+                        <textarea name="description" id="description"><?= $row['description']?></textarea>
+                        </p>
+                        <p>
+                        <label for="location">Location</label>
+                        <input name="location" id="location" value="<?= $row['location']?>">
+                        </p>
+                        <p>
+                        <label for="phoneNumber">Phone Number</label>
+                        <input name="phoneNumber" id="phoneNumber" value="<?= $row['phone_Number']?>">
+                        </p>
+                        <p>
+                        <label for="email">Email Address</label>
+                        <input name="email" id="email" value="<?= $row['email_Address']?>">
+                        </p>
+                        <p>
+                        <label for="userName">User Name</label>
+                        <input name="userName" id="userName" value="<?= $accountsRow['user_Name']?>">
+                        </p>
+                        <p>
+                        <label for="password">Password</label>
+                        <input name="password" id="password" type="password">
+                        </p>
+                        </p>
+                        <p>
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input name="confirmPassword" id="confirmPassword" type="password">
+                        </p>
+                        <p><?= $passwordError?></p>
+                        <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                        <input type="submit" name="command" value="Update">
+                        <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this? This will also delete the account associated to it.')">
                     </p>
-                    <p>
-                    <label for="description">Description</label>
-                    <textarea name="description" id="description"><?= $row['description']?></textarea>
-                    </p>
-                    <p>
-                    <label for="location">Location</label>
-                    <input name="location" id="location" value="<?= $row['location']?>">
-                    </p>
-                    <p>
-                    <label for="phoneNumber">Phone Number</label>
-                    <input name="phoneNumber" id="phoneNumber" value="<?= $row['phone_Number']?>">
-                    </p>
-                    <p>
-                    <label for="email">Email Address</label>
-                    <input name="email" id="email" value="<?= $row['email_Address']?>">
-                    </p>
-                    <input type="hidden" name="id" value="<?= $row['id'] ?>">
-                    <input type="submit" name="command" value="Update">
-                    <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this? This will also delete the account associated to it.')">
-                </p>
-            </form>
-            </div>  
-        <?php else:?>   
-            <h2>Only admin and <?= $row['name']?> account owner can access this page.</h2> 
-        <?php endif?>     
+                </form>
+                </div>  
+            <?php else:?>   
+                <h2>Only admin and <?= $row['name']?> account owner can access this page.</h2> 
+            <?php endif?>   
+        </div>  
     </div>  
 </body>
 </html>

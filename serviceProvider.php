@@ -29,25 +29,27 @@ if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT))
 <body>
     <div id="container">
     <?php include('navigation.php')?>
-        <div>
-            <?php if(isset($_SESSION['userName'])):?>
-                <h2>Welcome <?= $_SESSION['userName']?></h2>
-            <?php endif ?>
+    <div class="sectionBox">
             <div>
-                <h2><?= $serviceProvider['name']?></h2>
+                <?php if(isset($_SESSION['userName'])):?>
+                    <h2>Welcome <?= $_SESSION['userName']?></h2>
+                <?php endif ?>
                 <div>
-                    <?= $serviceProvider['description']?>
+                    <h2><?= $serviceProvider['name']?></h2>
+                    <div>
+                        <?= $serviceProvider['description']?>
+                    </div>
+                    <p>Location: <?= $serviceProvider['location']?></p>
+                    <p>Phone Number: <?= $serviceProvider['phone_Number']?></p>
+                    <p>Email address: <?= $serviceProvider['email_Address']?></p>
                 </div>
-                <p>Location: <?= $serviceProvider['location']?></p>
-                <p>Phone Number: <?= $serviceProvider['phone_Number']?></p>
-                <p>Email address: <?= $serviceProvider['email_Address']?></p>
             </div>
-        </div>
-        <?php if(isset($_SESSION['userName'])):?>
-            <?php if($_SESSION['userName'] == 'admin' || $_SESSION['Id'] == $id):?>
-                <a href="edit_service_providers.php?id=<?=$id?>">Edit or Delete</a>
+            <?php if(isset($_SESSION['userName'])):?>
+                <?php if($_SESSION['userName'] == 'admin' || $_SESSION['Id'] == $id):?>
+                    <a href="edit_service_providers.php?id=<?=$id?>">Edit or Delete</a>
+                <?php endif?>
             <?php endif?>
-        <?php endif?>
+    </div>
     </div>
 </body>
 </html>

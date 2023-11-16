@@ -56,6 +56,7 @@ if(isset($_GET['table'])){
     <?php if($_SESSION['type'] == 'admin'):?>
     <?php include('adminNavigation.php')?>
     <div id="content">
+    <div class="sectionBox">
         <h2>Your are login as <?= $_SESSION['userName']?></h2>
         <a href="logout.php">logout</a>
         <div id="services">
@@ -80,6 +81,7 @@ if(isset($_GET['table'])){
     <?php else:?>
         <h2>Only admins can access this page.</h2>
     <?php endif?>
+    </div>
 </div>
 </body>
 </html>

@@ -14,7 +14,6 @@ if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT))
 }else{
     header("Location: index.php");
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -29,6 +28,7 @@ if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT))
 <body>
     <div id="container">
     <?php include('navigation.php')?>
+    <div class="sectionBox">
         <div>
             <?php if(isset($_SESSION['userName'])):?>
                 <h2>Welcome <?= $_SESSION['userName']?></h2>
@@ -44,5 +44,6 @@ if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT))
             <?php endif?>
         <?php endif?>
     </div>
+</div> 
 </body>
 </html>
