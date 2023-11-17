@@ -5,7 +5,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #273543;
+    background-color: #344658;
     color: #fff;
 }
 
@@ -39,6 +39,11 @@ body {
 
 .sectionBox p {
     display: block;
+    margin-bottom: 10px;
+}
+
+.sectionBox button:hover {
+    background-color: #fff;
 }
 
 header{

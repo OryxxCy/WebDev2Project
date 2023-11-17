@@ -3,6 +3,8 @@
 require('connect.php');
 session_start();
 
+$serviceProviderHeader = "Service Providers";
+
 $query = "SELECT * FROM services";
 $statement = $db->prepare($query);
 $statement->execute(); 
@@ -14,6 +16,12 @@ if (isset($_POST['servicesSearchButton'])) {
     $statement = $db->prepare($query);
     $statement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
     $statement->execute();
+    $serviceProviderHeader = "Service Providers";
+}else if(isset($_POST['serviceProvidersResetButton'])){
+    $query = "SELECT * FROM services";
+    $statement = $db->prepare($query);
+    $statement->execute();
+    $serviceProviderHeader = "Service Providers";
 }
 
 $serviceProvidersQuery = "SELECT * FROM service_Providers";
@@ -29,23 +37,31 @@ if (isset($_POST['serviceProvidersSearchButton'])) {
     $serviceProvidersStatement->execute();
 }
 
-// if (isset($_POST['selectedServiceId'])) {
-//     $selectedServiceId = $_POST['selectedServiceId'];
+if (isset($_POST['selectedServiceId'])) {
+    $selectedServiceId = $_POST['selectedServiceId'];
 
-//     $selectedServiceQuery = "SELECT * FROM service_providers_services WHERE service_Id = :selectedServiceId";
-//     $selectedServiceStatement = $db->prepare($selectedServiceQuery);
-//     $selectedServiceStatement->bindValue(':selectedServiceId', $selectedServiceId, PDO::PARAM_INT);
-//     $selectedServiceStatement->execute();
+    $selectedServiceQuery = "SELECT * FROM service_providers_services WHERE service_Id = :selectedServiceId";
+    $selectedServiceStatement = $db->prepare($selectedServiceQuery);
+    $selectedServiceStatement->bindValue(':selectedServiceId', $selectedServiceId, PDO::PARAM_INT);
+    $selectedServiceStatement->execute();
 
-//     while($serviceProvidersServices = $selectedServiceStatement->fetch()){
-//         $selectedServiceProviderId = $serviceProvidersServices['service_Provider_Id'];
+    $selectedServiceNameQuery = "SELECT * FROM services WHERE id = :selectedServiceId";
+    $selectedServiceNameStatement = $db->prepare($selectedServiceNameQuery);
+    $selectedServiceNameStatement->bindValue(':selectedServiceId', $selectedServiceId, PDO::PARAM_INT);
+    $selectedServiceNameStatement->execute(); 
+    $selectedServiceName = $selectedServiceNameStatement->fetch();
+    $serviceProviderHeader = $selectedServiceName['name'];
+}
 
-//         $selectedServiceProviderQuery = "SELECT * FROM service_providers WHERE service_Provider_Id = :selectedServiceProviderId";
-//         $selectedServiceProviderStatement = $db->prepare($selectedServiceProviderQuery);
-//         $selectedServiceProviderStatement->bindValue(':selectedServiceProviderId', $selectedServiceProviderId, PDO::PARAM_INT);
-//         $selectedServiceProviderStatement->execute();
-//     }
-//}
+$findServiceProvider = function($selectedServiceProviderId) use ($db)  {
+    $selectedServiceProviderQuery = "SELECT * FROM service_providers WHERE id = :selectedServiceProviderId";
+    $selectedServiceProviderStatement = $db->prepare($selectedServiceProviderQuery);
+    $selectedServiceProviderStatement->bindValue(':selectedServiceProviderId', $selectedServiceProviderId, PDO::PARAM_INT);
+    $selectedServiceProviderStatement->execute();
+    $selectedServiceProvider = $selectedServiceProviderStatement->fetch();
+
+    return $selectedServiceProvider['name'];
+}
 
 ?>
 <!DOCTYPE html>
@@ -89,16 +105,24 @@ if (isset($_POST['serviceProvidersSearchButton'])) {
 
     <div class="sectionBox">
         <section class="searchBar">
-            <h2>Service Providers</h2>
+            <h2><?=$serviceProviderHeader?></h2>
             <form method="post">
                 <input type="text" name="serviceProvidersSearchTerm" placeholder="Search for a service provider">
                 <button type="submit" name="serviceProvidersSearchButton">Search</button>
+                <button type="submit" name="serviceProvidersResetButton">Reset</button>
             </form>
         </section>
         <section>
-            <?php while($serviceProviderRow = $serviceProvidersStatement->fetch()): ?>
-                <p><a href="serviceProvider.php?id=<?=$serviceProviderRow['id']?>"><?=$serviceProviderRow['name']?></a></p>
-            <?php endwhile ?>  
+            <?php if(isset($_POST['selectedServiceId'])):?>
+                <?php while($serviceProvidersServices = $selectedServiceStatement->fetch()): ?>
+                    <p><a href="serviceProvider.php?id=<?=$serviceProvidersServices['service_Provider_Id']?>"><?=$findServiceProvider($serviceProvidersServices['service_Provider_Id'])?></a></p>
+                    <p>$<?= $serviceProvidersServices['price']?></p>
+                <?php endwhile ?>  
+            <?php else:?>
+                <?php while($serviceProviderRow = $serviceProvidersStatement->fetch()): ?>
+                    <p><a href="serviceProvider.php?id=<?=$serviceProviderRow['id']?>"><?=$serviceProviderRow['name']?></a></p>
+                <?php endwhile ?>  
+            <?php endif?>
         </section>
     </div>
 </div>
