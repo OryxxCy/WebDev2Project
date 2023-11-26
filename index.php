@@ -4,6 +4,7 @@ require('connect.php');
 session_start();
 
 $serviceProviderHeader = "Service Providers";
+$serviceProviderDescription = "";
 
 $query = "SELECT * FROM services";
 $statement = $db->prepare($query);
@@ -17,11 +18,13 @@ if (isset($_POST['servicesSearchButton'])) {
     $statement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
     $statement->execute();
     $serviceProviderHeader = "Service Providers";
+    $serviceProviderDescription = "";
 }else if(isset($_POST['serviceProvidersResetButton'])){
     $query = "SELECT * FROM services";
     $statement = $db->prepare($query);
     $statement->execute();
     $serviceProviderHeader = "Service Providers";
+    $serviceProviderDescription = "";
 }
 
 $serviceProvidersQuery = "SELECT * FROM service_Providers";
@@ -51,6 +54,7 @@ if (isset($_POST['selectedServiceId'])) {
     $selectedServiceNameStatement->execute(); 
     $selectedServiceName = $selectedServiceNameStatement->fetch();
     $serviceProviderHeader = $selectedServiceName['name'];
+    $serviceProviderDescription = $selectedServiceName['description'];
 }
 
 $findServiceProvider = function($selectedServiceProviderId) use ($db)  {
@@ -112,6 +116,7 @@ $findServiceProvider = function($selectedServiceProviderId) use ($db)  {
                 <button type="submit" name="serviceProvidersResetButton">Reset</button>
             </form>
         </section>
+        <h3><?=$serviceProviderDescription?></h3>
         <section>
             <?php if(isset($_POST['selectedServiceId'])):?>
                 <?php while($serviceProvidersServices = $selectedServiceStatement->fetch()): ?>

@@ -151,6 +151,10 @@ if ($_POST && isset($_GET['id'])) {
             <div>
                 <form method="post">
                     <p>
+                        <input type='file' name='file'>
+                        <input type='submit' name='submit' value='Upload Profile Picture'>
+                    </p>
+                    <p>
                         <p>
                         <label for="name">Service Provider Name</label>
                         <input name="name" id="name" value="<?= $row['name']?>">
