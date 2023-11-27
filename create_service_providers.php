@@ -1,6 +1,7 @@
 <?php
 
 require('connect.php');
+require ('ImageResize.php');
 session_start();
 
 if (isset($_SESSION['userName'])) {
@@ -10,6 +11,7 @@ if (isset($_SESSION['userName'])) {
     } 
 }
 
+$imageError = "";
 $userNameError = "";
 $passwordError = "";
 $noError = true;
@@ -37,6 +39,21 @@ if ($_POST) {
     }else if($unavailableAccount){
         $userNameError = "Username is taken please select a different one.";
         $noError = false;
+    }
+
+    if(isset($_FILES['bannerImage']) && $_FILES['bannerImage']['error'] === 0){
+        $image_filename        = $_FILES['bannerImage']['name'];
+        $temporary_image_path  = $_FILES['bannerImage']['tmp_name'];
+        $new_image_path        = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR.  $image_filename;
+
+        if(!(file_is_a_valid_type($temporary_image_path, $new_image_path))){
+           $imageError = "Please upload images only.";
+           $noError = false;
+        }
+
+        $imageUploaded = true;
+    }else{
+        $imageUploaded = false;
     }
     
     if($noError){
@@ -69,6 +86,30 @@ if ($_POST) {
             $statement->bindValue(":id", $id);
 
             if($statement->execute()){
+                if($imageUploaded){
+                    $image = new \Gumlet\ImageResize($temporary_image_path);
+                    $image->resize(600, 280);
+                    $image->save($new_image_path);
+                    
+                    $query = "INSERT INTO images (banner) VALUES (:banner)";
+                    $statement = $db->prepare($query);
+    
+                    $bannerPicturePath ='Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR. $image_filename; 
+                    $statement->bindValue(":banner", $bannerPicturePath);
+    
+                    if($statement->execute())
+                    {
+                        $bannerId = $db->lastInsertId();
+                        $query = "UPDATE service_providers SET imageId = :bannerId WHERE Id = :id";
+                        $statement = $db->prepare($query);
+    
+                        $statement->bindValue(":bannerId", $bannerId); 
+                        $statement->bindValue(":id", $id);             
+                        
+                        $statement->execute();
+                    }      
+                }
+                
                 if($_SESSION['type'] == 'admin')
                 {
                     header("Location: admin.php?table=service_providers&column=name");
@@ -81,6 +122,21 @@ if ($_POST) {
             }
         }
     }
+}
+
+function file_is_a_valid_type($temporary_path, $new_path) {
+    $valid_Extension = null;
+
+    $allowed_mime_types      = ['image/jpeg', 'image/png'];
+    $allowed_file_extensions = ['jpg', 'jpeg', 'png'];
+
+    $actual_file_extension   = pathinfo($new_path, PATHINFO_EXTENSION); 
+    $actual_mime_type        = mime_content_type($temporary_path);
+
+    $file_extension_is_valid = in_array($actual_file_extension, $allowed_file_extensions);
+    $mime_type_is_valid      = in_array($actual_mime_type, $allowed_mime_types);
+
+    return $file_extension_is_valid && $mime_type_is_valid;
 }
 ?>
 
@@ -101,8 +157,12 @@ if ($_POST) {
         <a href="index.php">Back</a>
     <?php endif?>
         <div>
-            <form method="post">
+            <form method="post" enctype="multipart/form-data">
                 <h2>New Service Provider</h2>
+                <p>
+                <input type='file' name='bannerImage'>
+                </p>
+                <p class = "errorMessage"><?= $imageError?></p>
                 <p>
                 <label for="name">Service Provider Name</label>
                 <input name="name" id="name">

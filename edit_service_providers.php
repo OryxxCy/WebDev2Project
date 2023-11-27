@@ -133,6 +133,16 @@ if ($_POST && isset($_GET['id'])) {
         $statement->bindValue(':id', $id, PDO::PARAM_INT);
         $statement->execute();
 
+        if($row['imageId'] != 0 || $row['imageId'] != null){
+            unlink($imageRow['banner']);
+
+            $query = "DELETE FROM images WHERE id = :id LIMIT 1";
+
+            $statement = $db->prepare($query);
+            $statement->bindValue(':id', $row['imageId']);
+            $statement->execute();
+        }
+
         if($_SESSION['type'] == 'admin')
         {
             header("Location: admin.php?table=service_providers&column=name");
@@ -140,22 +150,22 @@ if ($_POST && isset($_GET['id'])) {
             session_destroy();
             header('Location: index.php');
         }
-    }else if($_POST['command'] == 'Upload Profile Picture'){
-        if(isset($_FILES['file'])){
-            $image_filename        = $_FILES['file']['name'];
-            $temporary_image_path  = $_FILES['file']['tmp_name'];
-            $new_image_path        = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Images' . DIRECTORY_SEPARATOR. 'Profile' . DIRECTORY_SEPARATOR.  $image_filename;
+    }else if($_POST['command'] == 'Upload Banner'){
+        if(isset($_FILES['bannerImage']) && $_FILES['bannerImage']['error'] === 0){
+            $image_filename        = $_FILES['bannerImage']['name'];
+            $temporary_image_path  = $_FILES['bannerImage']['tmp_name'];
+            $new_image_path        = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR.  $image_filename;
 
             if(file_is_a_valid_type($temporary_image_path, $new_image_path)){
                 $image = new \Gumlet\ImageResize($temporary_image_path);
-                $image->resize(70, 70);
+                $image->resize(600, 280);
                 $image->save($new_image_path);
                 
-                $query = "INSERT INTO images (profilePicture) VALUES (:profilePicture)";
+                $query = "INSERT INTO images (banner) VALUES (:banner)";
                 $statement = $db->prepare($query);
 
-                $profilePicturePath ='Images' . DIRECTORY_SEPARATOR. 'Profile' . DIRECTORY_SEPARATOR. $image_filename; 
-                $statement->bindValue(":profilePicture", $profilePicturePath);
+                $bannerPicturePath ='Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR. $image_filename; 
+                $statement->bindValue(":banner", $bannerPicturePath);
 
                 if($statement->execute())
                 {
@@ -173,22 +183,22 @@ if ($_POST && isset($_GET['id'])) {
                 header("Location: serviceProvider.php?id=" . $id);
 
             }else{
-                $imageError = "Please only upload images.";
+                $imageError = "Please upload images only.";
             }
         }else{
             $imageError = "No image was uploaded.";
         }
-    }else if($_POST['command'] == 'Remove Profile Picture'){
-        $query = "UPDATE service_providers SET imageId = :profilePictureId WHERE Id = :id";;
+    }else if($_POST['command'] == 'Remove Banner'){
+        $query = "UPDATE service_providers SET imageId = :bannerPictureId WHERE Id = :id";;
         $statement = $db->prepare($query);
 
-        $profilePictureId = 0;
-        $statement->bindValue(":profilePictureId", $profilePictureId); 
+        $bannerPictureId = 0;
+        $statement->bindValue(":bannerPictureId", $bannerPictureId); 
         $statement->bindValue(":id", $id);             
                     
         if($statement->execute())
         {
-            unlink($imageRow['profilePicture']);
+            unlink($imageRow['banner']);
 
             $query = "DELETE FROM images WHERE id = :id LIMIT 1";
 
@@ -242,11 +252,11 @@ function file_is_a_valid_type($temporary_path, $new_path) {
                 <form method="post" enctype="multipart/form-data">
                     <p>
                         <?php if($row['imageId'] == 0 || $row['imageId'] == null):?>
-                            <input type='file' name='file'>
-                            <input type='submit' name="command" value="Upload Profile Picture">
+                            <input type='file' name='bannerImage'>
+                            <input type='submit' name="command" value="Upload Banner">
                         <?php else:?>
-                            <img src="<?= $imageRow['profilePicture']?>" alt="Profile Picture">
-                            <input type='submit' name="command" value="Remove Profile Picture" onclick="return confirm('Are you sure you wish to delete this profile photo?')">
+                            <img src="<?= $imageRow['banner']?>" alt="Banner">
+                            <input type='submit' name="command" value="Remove Banner" onclick="return confirm('Are you sure you wish to delete this banner photo?')">
                         <?php endif?>  
                     </p>
                     <p class = "errorMessage"><?= $imageError?></p>
