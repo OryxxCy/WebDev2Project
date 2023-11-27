@@ -1,6 +1,7 @@
 <?php
 
 require('connect.php');
+require ('ImageResize.php');
 session_start();
 
 if (!isset($_SESSION['userName'])) {
@@ -8,6 +9,7 @@ if (!isset($_SESSION['userName'])) {
     exit();
 }
 
+$imageError = "";
 $userNameError = "";
 $passwordError = "";
 $noError = true;
@@ -27,6 +29,15 @@ if (isset($_GET['id'])) {
         
         $accountsStatement->execute();
         $accountsRow = $accountsStatement->fetch();
+
+        if($row['imageId'] != 0 || $row['imageId'] != null)
+        {
+            $imageQuery = "SELECT * FROM images WHERE id = :id";
+            $imageStatement = $db->prepare($imageQuery);
+            $imageStatement->bindValue(':id', $row['imageId']);
+            $imageStatement->execute();
+            $imageRow = $imageStatement->fetch();
+        }
     }else{
         if($_SESSION['type'] == 'admin')
         {
@@ -103,7 +114,7 @@ if ($_POST && isset($_GET['id'])) {
                 header("Location: serviceProvider.php?id=" . $id);
             }
         }
-    }else{
+    }else if($_POST['command'] == 'Delete') {
         $query = "DELETE FROM service_providers WHERE id = :id LIMIT 1";
 
         $statement = $db->prepare($query);
@@ -116,6 +127,12 @@ if ($_POST && isset($_GET['id'])) {
         $statement->bindValue(':id', $id, PDO::PARAM_INT);
         $statement->execute();
 
+        $query = "DELETE FROM service_providers_services WHERE service_Provider_Id = :id LIMIT 1";
+
+        $statement = $db->prepare($query);
+        $statement->bindValue(':id', $id, PDO::PARAM_INT);
+        $statement->execute();
+
         if($_SESSION['type'] == 'admin')
         {
             header("Location: admin.php?table=service_providers&column=name");
@@ -123,8 +140,81 @@ if ($_POST && isset($_GET['id'])) {
             session_destroy();
             header('Location: index.php');
         }
+    }else if($_POST['command'] == 'Upload Profile Picture'){
+        if(isset($_FILES['file'])){
+            $image_filename        = $_FILES['file']['name'];
+            $temporary_image_path  = $_FILES['file']['tmp_name'];
+            $new_image_path        = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Images' . DIRECTORY_SEPARATOR. 'Profile' . DIRECTORY_SEPARATOR.  $image_filename;
+
+            if(file_is_a_valid_type($temporary_image_path, $new_image_path)){
+                $image = new \Gumlet\ImageResize($temporary_image_path);
+                $image->resize(70, 70);
+                $image->save($new_image_path);
+                
+                $query = "INSERT INTO images (profilePicture) VALUES (:profilePicture)";
+                $statement = $db->prepare($query);
+
+                $profilePicturePath ='Images' . DIRECTORY_SEPARATOR. 'Profile' . DIRECTORY_SEPARATOR. $image_filename; 
+                $statement->bindValue(":profilePicture", $profilePicturePath);
+
+                if($statement->execute())
+                {
+                    $profilePictureId = $db->lastInsertId();
+                    $query = "UPDATE service_providers SET imageId = :profilePictureId WHERE Id = :id";
+                    $statement = $db->prepare($query);
+
+                    $statement->bindValue(":profilePictureId", $profilePictureId); 
+                    $statement->bindValue(":id", $id);             
+                    
+                    $statement->execute();
+                }
+
+                $imageError = "Uploaded";
+                header("Location: serviceProvider.php?id=" . $id);
+
+            }else{
+                $imageError = "Please only upload images.";
+            }
+        }else{
+            $imageError = "No image was uploaded.";
+        }
+    }else if($_POST['command'] == 'Remove Profile Picture'){
+        $query = "UPDATE service_providers SET imageId = :profilePictureId WHERE Id = :id";;
+        $statement = $db->prepare($query);
+
+        $profilePictureId = 0;
+        $statement->bindValue(":profilePictureId", $profilePictureId); 
+        $statement->bindValue(":id", $id);             
+                    
+        if($statement->execute())
+        {
+            unlink($imageRow['profilePicture']);
+
+            $query = "DELETE FROM images WHERE id = :id LIMIT 1";
+
+            $statement = $db->prepare($query);
+            $statement->bindValue(':id', $imageRow['id']);
+            $statement->execute();
+            header("Location: serviceProvider.php?id=" . $id);
+        }
     }
 } 
+
+function file_is_a_valid_type($temporary_path, $new_path) {
+    $valid_Extension = null;
+
+    $allowed_mime_types      = ['image/jpeg', 'image/png'];
+    $allowed_file_extensions = ['jpg', 'jpeg', 'png'];
+
+    $actual_file_extension   = pathinfo($new_path, PATHINFO_EXTENSION); 
+    $actual_mime_type        = mime_content_type($temporary_path);
+
+    $file_extension_is_valid = in_array($actual_file_extension, $allowed_file_extensions);
+    $mime_type_is_valid      = in_array($actual_mime_type, $allowed_mime_types);
+
+    return $file_extension_is_valid && $mime_type_is_valid;
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -149,11 +239,17 @@ if ($_POST && isset($_GET['id'])) {
                 <a href="serviceProvider.php?id=<?=$id?>">Back</a>
             <?php endif?> 
             <div>
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     <p>
-                        <input type='file' name='file'>
-                        <input type='submit' name='submit' value='Upload Profile Picture'>
+                        <?php if($row['imageId'] == 0 || $row['imageId'] == null):?>
+                            <input type='file' name='file'>
+                            <input type='submit' name="command" value="Upload Profile Picture">
+                        <?php else:?>
+                            <img src="<?= $imageRow['profilePicture']?>" alt="Profile Picture">
+                            <input type='submit' name="command" value="Remove Profile Picture" onclick="return confirm('Are you sure you wish to delete this profile photo?')">
+                        <?php endif?>  
                     </p>
+                    <p class = "errorMessage"><?= $imageError?></p>
                     <p>
                         <p>
                         <label for="name">Service Provider Name</label>
