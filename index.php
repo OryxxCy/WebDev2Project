@@ -5,6 +5,7 @@ session_start();
 
 $serviceProviderHeader = "Service Providers";
 $serviceProviderDescription = "";
+$slideNum = 1;
 
 $query = "SELECT * FROM services";
 $statement = $db->prepare($query);
@@ -30,6 +31,10 @@ if (isset($_POST['servicesSearchButton'])) {
 $serviceProvidersQuery = "SELECT * FROM service_Providers";
 $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
 $serviceProvidersStatement->execute(); 
+
+$imagesQuery = "SELECT * FROM images LIMIT 4";
+$imagesStatement = $db->prepare($imagesQuery);
+$imagesStatement->execute(); 
 
 if (isset($_POST['serviceProvidersSearchButton'])) {
     $searchTerm = filter_input(INPUT_POST, 'serviceProvidersSearchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
@@ -57,6 +62,7 @@ if (isset($_POST['selectedServiceId'])) {
     $serviceProviderDescription = $selectedServiceName['description'];
 }
 
+//
 $findServiceProvider = function($selectedServiceProviderId) use ($db)  {
     $selectedServiceProviderQuery = "SELECT * FROM service_providers WHERE id = :selectedServiceProviderId";
     $selectedServiceProviderStatement = $db->prepare($selectedServiceProviderQuery);
@@ -65,6 +71,19 @@ $findServiceProvider = function($selectedServiceProviderId) use ($db)  {
     $selectedServiceProvider = $selectedServiceProviderStatement->fetch();
 
     return $selectedServiceProvider['name'];
+};
+
+//
+$findBannerServiceProvider = function($imageId) use ($db) {
+    $selectedImageQuery = "SELECT * FROM service_providers WHERE imageId = :imageId";
+    $selectedImageStatement = $db->prepare($selectedImageQuery);
+    $selectedImageStatement->bindValue(':imageId', $imageId, PDO::PARAM_INT);
+    $selectedImageStatement->execute();
+    $selectedSImage = $selectedImageStatement->fetch();
+
+    $serviceProviderPageLink = "serviceProvider.php?id=" . $selectedSImage['id'];
+
+    return $serviceProviderPageLink;
 }
 
 ?>
@@ -90,6 +109,20 @@ $findServiceProvider = function($selectedServiceProviderId) use ($db)  {
         </p>
         </section>
     </div>
+    <section class="slider-wrapper">
+            <div class="slider">
+                <?php while($imageRow = $imagesStatement->fetch()): ?>
+                    <img id="slide-<?=$slideNum?>" src="<?=$imageRow['banner']?>" alt="Banner photo">
+                    <a class="slider-nav" href="<?=$findBannerServiceProvider($imageRow['id'])?>">LINK</a>
+                    <?php $slideNum++?>
+                <?php endwhile ?>
+                <div class="slider-nav">
+                <?php for($i = 1 ; $i < $slideNum; $i++): ?>
+                    <a href="#slide-<?=$i?>"></a>
+                <?php endfor?>
+                </div>
+            </div>
+        </section>
     <div class="sectionBox">
         <section class="searchBar">
             <h2>Services</h2>

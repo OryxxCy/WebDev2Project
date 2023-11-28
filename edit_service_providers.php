@@ -156,11 +156,7 @@ if ($_POST && isset($_GET['id'])) {
             $temporary_image_path  = $_FILES['bannerImage']['tmp_name'];
             $new_image_path        = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR.  $image_filename;
 
-            if(file_is_a_valid_type($temporary_image_path, $new_image_path)){
-                $image = new \Gumlet\ImageResize($temporary_image_path);
-                $image->resize(600, 280);
-                $image->save($new_image_path);
-                
+            if(file_is_a_valid_type($temporary_image_path, $new_image_path)){                
                 $query = "INSERT INTO images (banner) VALUES (:banner)";
                 $statement = $db->prepare($query);
 
@@ -169,14 +165,31 @@ if ($_POST && isset($_GET['id'])) {
 
                 if($statement->execute())
                 {
-                    $profilePictureId = $db->lastInsertId();
-                    $query = "UPDATE service_providers SET imageId = :profilePictureId WHERE Id = :id";
+                    $bannerId = $db->lastInsertId();
+                    $query = "UPDATE service_providers SET imageId = :bannerId WHERE Id = :id";
                     $statement = $db->prepare($query);
 
-                    $statement->bindValue(":profilePictureId", $profilePictureId); 
+                    $statement->bindValue(":bannerId", $bannerId); 
                     $statement->bindValue(":id", $id);             
                     
-                    $statement->execute();
+                    if($statement->execute()){
+                        $image_filename =  $bannerId . $_FILES['bannerImage']['name'];
+                        $new_image_path = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR.  $image_filename;
+    
+                        $image = new \Gumlet\ImageResize($temporary_image_path);
+                        $image->resize(820, 380);
+                        $image->save($new_image_path);
+
+                        $bannerPicturePath ='Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR. $image_filename; 
+                        $query = "UPDATE images SET banner = :banner WHERE id = :bannerId";
+                        $statement = $db->prepare($query);
+            
+                        $statement->bindValue(":banner", $bannerPicturePath);
+                        $statement->bindValue(":bannerId", $bannerId);
+
+                        $statement->execute();
+
+                    }
                 }
 
                 $imageError = "Uploaded";
@@ -255,7 +268,6 @@ function file_is_a_valid_type($temporary_path, $new_path) {
                             <input type='file' name='bannerImage'>
                             <input type='submit' name="command" value="Upload Banner">
                         <?php else:?>
-                            <img src="<?= $imageRow['banner']?>" alt="Banner">
                             <input type='submit' name="command" value="Remove Banner" onclick="return confirm('Are you sure you wish to delete this banner photo?')">
                         <?php endif?>  
                     </p>

@@ -87,10 +87,6 @@ if ($_POST) {
 
             if($statement->execute()){
                 if($imageUploaded){
-                    $image = new \Gumlet\ImageResize($temporary_image_path);
-                    $image->resize(600, 280);
-                    $image->save($new_image_path);
-                    
                     $query = "INSERT INTO images (banner) VALUES (:banner)";
                     $statement = $db->prepare($query);
     
@@ -106,7 +102,24 @@ if ($_POST) {
                         $statement->bindValue(":bannerId", $bannerId); 
                         $statement->bindValue(":id", $id);             
                         
-                        $statement->execute();
+                        if($statement->execute()){
+                            $image_filename =  $bannerId . $_FILES['bannerImage']['name'];
+                            $new_image_path = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR.  $image_filename;
+        
+                            $image = new \Gumlet\ImageResize($temporary_image_path);
+                            $image->resize(820, 380);
+                            $image->save($new_image_path);
+
+                            $bannerPicturePath ='Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR. $image_filename; 
+                            $query = "UPDATE images SET banner = :banner WHERE id = :bannerId";
+                            $statement = $db->prepare($query);
+                
+                            $statement->bindValue(":banner", $bannerPicturePath);
+                            $statement->bindValue(":bannerId", $bannerId);
+    
+                            $statement->execute();
+
+                        }
                     }      
                 }
                 

@@ -11,6 +11,15 @@ if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT))
     $statement->bindValue(':id', $id, PDO::PARAM_INT);
     $statement->execute();
     $serviceProvider = $statement->fetch();
+
+    if($serviceProvider['imageId'] != 0 || $serviceProvider['imageId'] != null ){
+            $imageQuery = "SELECT * FROM images WHERE id = :id";
+            $imageStatement = $db->prepare($imageQuery);
+            $imageStatement->bindValue(':id', $serviceProvider['imageId']);
+            $imageStatement->execute();
+            $imageRow = $imageStatement->fetch();
+    }
+
 }else{
     header("Location: index.php");
 }
@@ -36,6 +45,9 @@ if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT))
                 <?php endif ?>
                 <div>
                     <h2><?= $serviceProvider['name']?></h2>
+                    <?php if($serviceProvider['imageId'] != 0 || $serviceProvider['imageId'] != null ):?>
+                        <img src="<?=$imageRow['banner']?>" alt="Banner photo of <?= $serviceProvider['name']?>">
+                    <?php endif?>
                     <div>
                         <?= $serviceProvider['description']?>
                     </div>
