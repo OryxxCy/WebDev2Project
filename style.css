@@ -68,7 +68,7 @@ body {
 }
 
 
-#about, .sectionBox {
+#about, .sectionBox, .serviceProviderPage {
     padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 8px #efe6e6;
@@ -89,17 +89,6 @@ body {
 
 .sectionBox button:hover {
     background-color: #fff;
-}
-
-.link-text{
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    padding: 10px;
-    background-color: #fff;
-    border: 1px solid #333;
-    border-radius: 5px;
-    cursor: pointer;
 }
 
 header{

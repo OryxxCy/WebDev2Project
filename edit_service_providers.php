@@ -12,7 +12,7 @@ if (!isset($_SESSION['userName'])) {
 $imageError = "";
 $userNameError = "";
 $passwordError = "";
-$noError = true;
+$noError;
 
 if (isset($_GET['id'])) { 
     if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT)){
@@ -178,7 +178,7 @@ if ($_POST && isset($_GET['id'])) {
     
                         $image = new \Gumlet\ImageResize($temporary_image_path);
                         $image->resize(820, 380);
-                        $image->save($new_image_path);
+                        $image->save($new_image_path); 
 
                         $bannerPicturePath ='Images' . DIRECTORY_SEPARATOR. 'Banner' . DIRECTORY_SEPARATOR. $image_filename; 
                         $query = "UPDATE images SET banner = :banner WHERE id = :bannerId";
