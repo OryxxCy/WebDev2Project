@@ -14,7 +14,7 @@ if (isset($_SESSION['userName'])) {
 $imageError = "";
 $userNameError = "";
 $passwordError = "";
-$noError;
+$noError = 'true';
 
 if ($_POST) {
     $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);

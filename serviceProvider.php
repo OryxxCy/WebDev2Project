@@ -9,7 +9,19 @@ $ratingError ="";
 if(isset($_GET['id']))
 {
     $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
-    
+
+    $accountQuery = "SELECT * FROM accounts WHERE user_Name = :userName";
+    $accountStatement = $db->prepare($accountQuery);
+    $accountStatement->bindValue(':userName', $_SESSION['userName']);
+    $accountStatement->execute();
+    $account = $accountStatement->fetch();
+
+    $customerRateQuery = "SELECT * FROM ratings WHERE customer_Id = :customer_Id AND service_Provider_Id = :service_Provider_Id";
+    $customerRateStatement = $db->prepare($customerRateQuery);
+    $customerRateStatement->bindValue(":service_Provider_Id", $id);
+    $customerRateStatement->bindValue(":customer_Id", $account['customer_Id']);
+    $customerRateStatement->execute();
+
     $query = "SELECT * FROM service_providers WHERE id = :id";
     $statement = $db->prepare($query);
     $statement->bindValue(':id', $id, PDO::PARAM_INT);
@@ -28,12 +40,11 @@ if(isset($_GET['id']))
     }else{
         header("Location: index.php");
     }
-   
 }else{
     header("Location: index.php");
 }
 
-if(isset($_POST['command'])){
+if(isset($_POST['rate'])){
     $customerRate;
 
     if (!isset($_POST['rating']) || empty($_POST['rating'])) {
@@ -56,24 +67,14 @@ if(isset($_POST['command'])){
                 $customerRate = 1;
                 break;        
         }
-      
-        $customerQuery = "SELECT * FROM accounts WHERE user_Name = :userName";
-        $customerStatement = $db->prepare($customerQuery);
-        $customerStatement->bindValue(':userName', $_SESSION['userName']);
-        $customerStatement->execute();
-        $customer = $customerStatement->fetch();
-
-        $ratingQuery = "INSERT INTO ratings (service_Id, customer_Id, rating) VALUES (:service_Id, :customer_Id, :rating)";
+        $ratingQuery = "INSERT INTO ratings (service_Provider_Id, customer_Id, rating) VALUES (:service_Provider_Id, :customer_Id, :rating)";
         $ratingStatement = $db->prepare($ratingQuery);
-        $ratingStatement->bindValue(":service_Id", $id);
-        $ratingStatement->bindValue(":customer_Id", $customer['customer_Id']);
+        $ratingStatement->bindValue(":service_Provider_Id", $id);
+        $ratingStatement->bindValue(":customer_Id", $account['customer_Id']);
         $ratingStatement->bindValue(":rating", $customerRate);
         $ratingStatement->execute();
     }
 }
-
-
-
 ?>
 
 <!DOCTYPE html>
@@ -106,27 +107,32 @@ if(isset($_POST['command'])){
                     <p>Email address: <?= $serviceProvider['email_Address']?></p>
                 </div>
             </div>
-            <?php if($_SESSION['type'] == 'customer'):?>
-                <form method = 'post'>
-                    <label for="rating">Rate</label>
-                    <input type="radio" id="5stars" name="rating" value="5">
-                    <label for="5stars">5⭐</label>
+            <?php if(($customerRateStatement->rowCount() > 0)):?>
+                <?php $customerRateRow = $customerRateStatement->fetch()?>
+                <p><?=$customerRateRow['rating']?>⭐</p>
+            <?php else:?>
+                <?php if(isset($_SESSION['userName']) && $_SESSION['type'] == 'customer'):?>
+                    <form method = 'post'>
+                        <label for="rating">Rate</label>
+                        <input type="radio" id="5stars" name="rating" value="5">
+                        <label for="5stars">5⭐</label>
 
-                    <input type="radio" id="4stars" name="rating" value="4">
-                    <label for="4stars">4⭐</label>
+                        <input type="radio" id="4stars" name="rating" value="4">
+                        <label for="4stars">4⭐</label>
 
-                    <input type="radio" id="3stars" name="rating" value="3">
-                    <label for="3stars">3⭐</label>
+                        <input type="radio" id="3stars" name="rating" value="3">
+                        <label for="3stars">3⭐</label>
 
-                    <input type="radio" id="2stars" name="rating" value="2">
-                    <label for="2stars">2⭐</label>
+                        <input type="radio" id="2stars" name="rating" value="2">
+                        <label for="2stars">2⭐</label>
 
-                    <input type="radio" id="1star" name="rating" value="1">
-                    <label for="1star">1⭐</label>
+                        <input type="radio" id="1star" name="rating" value="1">
+                        <label for="1star">1⭐</label>
 
-                    <input type="submit" name='command' value="Submit Rating">
-                </form>
-                <p class = "errorMessage"><?= $ratingError?></p>
+                        <input type="submit" name='rate' value="Submit Rating">
+                    </form>
+                    <p class = "errorMessage"><?= $ratingError?></p>
+                <?php endif?>
             <?php endif?>
             <?php if(isset($_SESSION['userName'])):?>
                 <?php if($_SESSION['type'] == 'admin' || ($_SESSION['type'] != 'customer' && $_SESSION['Id'] == $id)):?>

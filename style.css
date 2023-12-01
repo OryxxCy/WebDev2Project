@@ -198,3 +198,20 @@ button {
     color: red;
     font-size: 1.2em;
 }
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+a {
+    color: #3498db;
+    text-decoration: none;
+}

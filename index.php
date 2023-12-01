@@ -3,6 +3,12 @@
 require('connect.php');
 session_start();
 
+$nameSelected = "";
+$dateSelected = "";
+$rateSelected = "";
+$sortfocus = "";
+$searchfocus = "";
+
 $serviceProviderHeader = "Service Providers";
 $serviceProviderDescription = "";
 $slideNum = 1;
@@ -11,24 +17,15 @@ $query = "SELECT * FROM services";
 $statement = $db->prepare($query);
 $statement->execute(); 
 
-if (isset($_POST['servicesSearchButton'])) {
-    $searchTerm = filter_input(INPUT_POST, 'servicesSearchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+$serviceProvidersQuery =   "SELECT sp.*, FORMAT(avg_rating, 2) AS avg_rating
+                            FROM service_providers sp
+                            LEFT JOIN (
+                                SELECT service_Provider_Id, AVG(rating) AS avg_rating
+                                FROM ratings
+                                GROUP BY service_Provider_Id
+                            ) r ON sp.id = r.service_Provider_Id
+                            ORDER BY sp.name ASC";
 
-    $query = "SELECT * FROM services WHERE name LIKE :searchTerm";
-    $statement = $db->prepare($query);
-    $statement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
-    $statement->execute();
-    $serviceProviderHeader = "Service Providers";
-    $serviceProviderDescription = "";
-}else if(isset($_POST['serviceProvidersResetButton'])){
-    $query = "SELECT * FROM services";
-    $statement = $db->prepare($query);
-    $statement->execute();
-    $serviceProviderHeader = "Service Providers";
-    $serviceProviderDescription = "";
-}
-
-$serviceProvidersQuery = "SELECT * FROM service_Providers";
 $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
 $serviceProvidersStatement->execute(); 
 
@@ -36,31 +33,98 @@ $imagesQuery = "SELECT * FROM images LIMIT 4";
 $imagesStatement = $db->prepare($imagesQuery);
 $imagesStatement->execute(); 
 
-if (isset($_POST['serviceProvidersSearchButton'])) {
-    $searchTerm = filter_input(INPUT_POST, 'serviceProvidersSearchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+if($_POST)
+{
+    if (isset($_POST['servicesSearchButton'])) {
+        $searchTerm = filter_input(INPUT_POST, 'servicesSearchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    
+        $query = "SELECT * FROM services WHERE name LIKE :searchTerm";
+        $statement = $db->prepare($query);
+        $statement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
+        $statement->execute();
+        $serviceProviderHeader = "Service Providers";
+        $serviceProviderDescription = "";
+    }else if(isset($_POST['serviceProvidersResetButton'])){
+        $serviceProvidersQuery =   "SELECT sp.*, FORMAT(avg_rating, 2) AS avg_rating
+                                    FROM service_providers sp
+                                    LEFT JOIN (
+                                        SELECT service_Provider_Id, AVG(rating) AS avg_rating
+                                        FROM ratings
+                                        GROUP BY service_Provider_Id
+                                    ) r ON sp.id = r.service_Provider_Id
+                                    ORDER BY sp.name ASC";
+        $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
+        $serviceProvidersStatement->execute(); 
+        $serviceProviderHeader = "Service Providers";
+        $serviceProviderDescription = "";
+        $searchfocus = "autofocus";
+    }else if (isset($_POST['serviceProvidersSearchButton'])) {
+        $searchTerm = filter_input(INPUT_POST, 'serviceProvidersSearchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    
 
-    $serviceProvidersQuery = "SELECT * FROM service_providers WHERE name LIKE :searchTerm";
-    $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
-    $serviceProvidersStatement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
-    $serviceProvidersStatement->execute();
+        $serviceProvidersQuery =   "SELECT *, FORMAT(AVG(avg_rating), 2) AS avg_rating
+                                    FROM Service_Providers sp
+                                    LEFT JOIN (
+                                        SELECT service_Provider_Id, AVG(rating) AS avg_rating
+                                        FROM ratings 
+                                        GROUP BY service_Provider_Id
+                                    ) r ON sp.id = r.service_Provider_Id
+                                    WHERE sp.name LIKE :searchTerm";
+        $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
+        $serviceProvidersStatement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
+        $serviceProvidersStatement->execute();
+    } else if (isset($_POST['sort'])) {
+        $sortOrder;
+         
+         switch ($_POST['sort']) {
+             case "name":
+                 $sortOrder = "name ASC"; 
+                 $nameSelected = "selected";
+                 break;
+             case "date":
+                 $sortOrder = "creation_Date ASC"; 
+                 $dateSelected = "selected";
+                 break;
+             case "rating":
+                 $sortOrder =   "avg_rating DESC";
+                 $rateSelected = "selected";
+                 break; 
+         }
+     
+         $serviceProvidersQuery =  "SELECT sp.*, FORMAT(avg_rating, 2) AS avg_rating
+                                    FROM service_providers sp
+                                    LEFT JOIN (
+                                        SELECT service_Provider_Id, AVG(rating) AS avg_rating
+                                        FROM ratings
+                                        GROUP BY service_Provider_Id
+                                    ) r ON sp.id = r.service_Provider_Id
+                                    ORDER BY $sortOrder";
+         $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
+         $serviceProvidersStatement->execute();
+
+         $sortfocus = "autofocus";
+     }
+    
+    
+    if (isset($_POST['selectedServiceId'])) {
+        $selectedServiceId = $_POST['selectedServiceId'];
+    
+        $selectedServiceQuery = "SELECT * FROM service_providers_services WHERE service_Id = :selectedServiceId";
+        $selectedServiceStatement = $db->prepare($selectedServiceQuery);
+        $selectedServiceStatement->bindValue(':selectedServiceId', $selectedServiceId, PDO::PARAM_INT);
+        $selectedServiceStatement->execute();
+    
+        $selectedServiceNameQuery = "SELECT * FROM services WHERE id = :selectedServiceId";
+        $selectedServiceNameStatement = $db->prepare($selectedServiceNameQuery);
+        $selectedServiceNameStatement->bindValue(':selectedServiceId', $selectedServiceId, PDO::PARAM_INT);
+        $selectedServiceNameStatement->execute(); 
+        $selectedServiceName = $selectedServiceNameStatement->fetch();
+        $serviceProviderHeader = $selectedServiceName['name'];
+        $serviceProviderDescription = $selectedServiceName['description'];
+    }
 }
 
-if (isset($_POST['selectedServiceId'])) {
-    $selectedServiceId = $_POST['selectedServiceId'];
 
-    $selectedServiceQuery = "SELECT * FROM service_providers_services WHERE service_Id = :selectedServiceId";
-    $selectedServiceStatement = $db->prepare($selectedServiceQuery);
-    $selectedServiceStatement->bindValue(':selectedServiceId', $selectedServiceId, PDO::PARAM_INT);
-    $selectedServiceStatement->execute();
-
-    $selectedServiceNameQuery = "SELECT * FROM services WHERE id = :selectedServiceId";
-    $selectedServiceNameStatement = $db->prepare($selectedServiceNameQuery);
-    $selectedServiceNameStatement->bindValue(':selectedServiceId', $selectedServiceId, PDO::PARAM_INT);
-    $selectedServiceNameStatement->execute(); 
-    $selectedServiceName = $selectedServiceNameStatement->fetch();
-    $serviceProviderHeader = $selectedServiceName['name'];
-    $serviceProviderDescription = $selectedServiceName['description'];
-}
 
 //
 $findServiceProvider = function($selectedServiceProviderId) use ($db)  {
@@ -141,10 +205,17 @@ $findBannerServiceProvider = function($imageId) use ($db) {
     </div>
 
     <div class="sectionBox">
-        <section class="searchBar">
+        <section class="searchBar" >
             <h2><?=$serviceProviderHeader?></h2>
             <form method="post">
-                <input type="text" name="serviceProvidersSearchTerm" placeholder="Search for a service provider">
+                <label for="sort">Sort by:</label>
+                <select name="sort" id="sort" <?= $sortfocus?>>
+                    <option value="name" <?= $nameSelected?>>Name</option>
+                    <option value="date" <?= $dateSelected?>>Created Date</option>
+                    <option value="rating" <?= $rateSelected?>>Rating</option>
+                </select>
+                <button type="submit" name="sortServiceProviderButton">Sort</button>
+                <input type="text" name="serviceProvidersSearchTerm" placeholder="Search for a service provider" <?=$searchfocus?>>
                 <button type="submit" name="serviceProvidersSearchButton">Search</button>
                 <button type="submit" name="serviceProvidersResetButton">Reset</button>
             </form>
@@ -157,9 +228,34 @@ $findBannerServiceProvider = function($imageId) use ($db) {
                     <p>$<?= $serviceProvidersServices['price']?></p>
                 <?php endwhile ?>  
             <?php else:?>
-                <?php while($serviceProviderRow = $serviceProvidersStatement->fetch()): ?>
-                    <p><a href="serviceProvider.php?id=<?=$serviceProviderRow['id']?>"><?=$serviceProviderRow['name']?></a></p>
-                <?php endwhile ?>  
+                <table>
+                    <tr>
+                        <th>Service Provider</th>
+                        <th>Phone Number</th>
+                        <th>Email Address</th>
+                        <th>Creation date</th>
+                        <th>Rate</th>
+                    </tr>
+                    <?php while($serviceProviderRow = $serviceProvidersStatement->fetch()): ?>
+                        <tr>
+                            <td>
+                                <a href="serviceProvider.php?id=<?=$serviceProviderRow['id']?>"><?=$serviceProviderRow['name']?></a>
+                            </td>
+                            <td>
+                                <?=$serviceProviderRow['phone_Number']?>
+                            </td>
+                            <td>
+                                <?=$serviceProviderRow['email_Address']?>
+                            </td>
+                            <td>
+                                <?=$serviceProviderRow['creation_Date']?>
+                            </td>
+                            <td>
+                                <?= $serviceProviderRow['avg_rating'] !== null ? $serviceProviderRow['avg_rating'] . '⭐' : 'Not rated' ?>
+                            </td>
+                        </tr>
+                    <?php endwhile ?> 
+                </table>
             <?php endif?>
         </section>
     </div>
