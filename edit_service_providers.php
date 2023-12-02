@@ -14,6 +14,10 @@ $userNameError = "";
 $passwordError = "";
 $noError;
 
+$servicesQuery = "SELECT * FROM services";
+$serviceStatement = $db->prepare($servicesQuery);
+$serviceStatement->execute();
+
 if (isset($_GET['id'])) { 
     if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT)){
         $query = "SELECT * FROM service_providers WHERE id = :id";
@@ -29,6 +33,12 @@ if (isset($_GET['id'])) {
         
         $accountsStatement->execute();
         $accountsRow = $accountsStatement->fetch();
+
+        $currentServiceQuery = "SELECT * FROM service_providers_services WHERE service_Provider_Id = :id";
+
+        $currentServiceStatement = $db->prepare($currentServiceQuery);
+        $currentServiceStatement->bindValue(':id', $id, PDO::PARAM_INT);
+        $currentServiceStatement->execute();
 
         if($row['imageId'] != 0 || $row['imageId'] != null)
         {
@@ -202,7 +212,7 @@ if ($_POST && isset($_GET['id'])) {
             $imageError = "No image was uploaded.";
         }
     }else if($_POST['command'] == 'Remove Banner'){
-        $query = "UPDATE service_providers SET imageId = :bannerPictureId WHERE Id = :id";;
+        $query = "UPDATE service_providers SET imageId = :bannerPictureId WHERE Id = :id";
         $statement = $db->prepare($query);
 
         $bannerPictureId = 0;
@@ -220,6 +230,23 @@ if ($_POST && isset($_GET['id'])) {
             $statement->execute();
             header("Location: serviceProvider.php?id=" . $id);
         }
+    }else if($_POST['command'] == 'Update Service'){
+        
+        $insertServiceQuery = "SELECT * FROM services WHERE name LIKE :name";
+        $insertServiceStatement = $db->prepare($insertServiceQuery);
+        $insertServiceStatement->bindValue(":name", $_POST['service']);
+
+        if($insertServiceStatement->execute()){
+            $insertServiceRow = $insertServiceStatement->fetch();
+            $query = "UPDATE service_providers_services SET service_Id = :service_Id, price = :price WHERE service_Provider_Id = :id";
+            $statement = $db->prepare($query);
+            $statement->bindValue(":service_Id", $insertServiceRow['id']);
+            $statement->bindValue(":price", $_POST['price']);
+            $statement->bindValue(':id', $id, PDO::PARAM_INT);
+
+            $statement->execute();
+        }
+        header("Location: serviceProvider.php?id=" . $id);
     }
 } 
 
@@ -272,6 +299,18 @@ function file_is_a_valid_type($temporary_path, $new_path) {
                         <?php endif?>  
                     </p>
                     <p class = "errorMessage"><?= $imageError?></p>
+                    <p>
+                        <label for="service">Service</label>
+                            <select name="service" id="service">
+                                <?php while($serviceRow = $serviceStatement->fetch()):?>
+                                <option value="<?= $serviceRow['name']?>"><?= $serviceRow['name']?></option>
+                                <?php endwhile?>
+                            </select>
+                            <a href="create_services.php?id=<?=$id?>">Add New Service</a>
+                            <label for="price">Service Price</label> 
+                            <input name="price" type ="number" id="price">
+                            <input type='submit' name="command" value="Update Service">
+                    </p>
                     <p>
                         <p>
                         <label for="name">Service Provider Name</label>

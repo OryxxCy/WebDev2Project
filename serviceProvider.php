@@ -74,6 +74,18 @@ if(isset($_POST['rate'])){
         $ratingStatement->bindValue(":rating", $customerRate);
         $ratingStatement->execute();
     }
+
+    $accountQuery = "SELECT * FROM accounts WHERE user_Name = :userName";
+    $accountStatement = $db->prepare($accountQuery);
+    $accountStatement->bindValue(':userName', $_SESSION['userName']);
+    $accountStatement->execute();
+    $account = $accountStatement->fetch();
+
+    $customerRateQuery = "SELECT * FROM ratings WHERE customer_Id = :customer_Id AND service_Provider_Id = :service_Provider_Id";
+    $customerRateStatement = $db->prepare($customerRateQuery);
+    $customerRateStatement->bindValue(":service_Provider_Id", $id);
+    $customerRateStatement->bindValue(":customer_Id", $account['customer_Id']);
+    $customerRateStatement->execute();
 }
 ?>
 
@@ -109,7 +121,7 @@ if(isset($_POST['rate'])){
             </div>
             <?php if(($customerRateStatement->rowCount() > 0)):?>
                 <?php $customerRateRow = $customerRateStatement->fetch()?>
-                <p><?=$customerRateRow['rating']?>⭐</p>
+                <p>You rated it<?=$customerRateRow['rating']?> ⭐</p>
             <?php else:?>
                 <?php if(isset($_SESSION['userName']) && $_SESSION['type'] == 'customer'):?>
                     <form method = 'post'>

@@ -16,6 +16,10 @@ $userNameError = "";
 $passwordError = "";
 $noError = 'true';
 
+$servicesQuery = "SELECT * FROM services";
+$serviceStatement = $db->prepare($servicesQuery);
+$serviceStatement->execute();
+
 if ($_POST) {
     $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
@@ -74,6 +78,21 @@ if ($_POST) {
 
         if($statement->execute()){
             $id = $db->lastInsertId();
+
+            $insertServiceQuery = "SELECT * FROM services WHERE name LIKE :name";
+            $insertServiceStatement = $db->prepare($insertServiceQuery);
+            $insertServiceStatement->bindValue(":name", $_POST['service']);
+
+            if($insertServiceStatement->execute()){
+                $insertServiceRow = $insertServiceStatement->fetch();
+                $query = "INSERT INTO service_providers_services (service_Id, service_Provider_Id, price) VALUES (:service_Id, :service_Provider_Id, :price)";
+                $statement = $db->prepare($query);
+                $statement->bindValue(":service_Id", $insertServiceRow['id']);
+                $statement->bindValue(":service_Provider_Id", $id);
+                $statement->bindValue(":price", $_POST['price']);
+                $statement->execute();
+            }
+            
             $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
             $type = "service provider";
 
@@ -195,6 +214,17 @@ function file_is_a_valid_type($temporary_path, $new_path) {
                 <p>
                 <label for="email">Email Address</label>
                 <input name="email" id="email">
+                </p>
+                <p>
+                <label for="service">Service</label>
+                <select name="service" id="service">
+                    <?php while($serviceRow = $serviceStatement->fetch()):?>
+                    <option value="<?= $serviceRow['name']?>"><?= $serviceRow['name']?></option>
+                    <?php endwhile?>
+                </select>
+                <a href="create_services.php">Add New Service</a>
+                <label for="price">Service Price</label> 
+                <input name="price" type ="number" id="price">
                 </p>
                 <p>
                 <label for="userName">User Name</label>

@@ -61,7 +61,6 @@ if($_POST)
     }else if (isset($_POST['serviceProvidersSearchButton'])) {
         $searchTerm = filter_input(INPUT_POST, 'serviceProvidersSearchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     
-
         $serviceProvidersQuery =   "SELECT *, FORMAT(AVG(avg_rating), 2) AS avg_rating
                                     FROM Service_Providers sp
                                     LEFT JOIN (
