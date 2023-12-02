@@ -9,6 +9,10 @@ $rateSelected = "";
 $sortfocus = "";
 $searchfocus = "";
 
+$currentOffset = isset($_GET['page']) ? $_GET['page'] : 0;
+$pageNumber = 1;
+$totalPage = 0;
+
 $serviceProviderHeader = "Service Providers";
 $serviceProviderDescription = "";
 $slideNum = 1;
@@ -33,6 +37,33 @@ $imagesQuery = "SELECT * FROM images LIMIT 4";
 $imagesStatement = $db->prepare($imagesQuery);
 $imagesStatement->execute(); 
 
+$searchTerm = filter_input(INPUT_GET, 'searchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+if(isset($_GET['searchTerm']))
+{
+    $serviceProvidersQuery = "SELECT * FROM service_providers WHERE name LIKE :searchTerm";
+    $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
+    $serviceProvidersStatement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
+    $serviceProvidersStatement->execute();
+    $totalPage = $serviceProvidersStatement->rowCount();
+
+    $serviceProvidersQuery =   "SELECT *, FORMAT(AVG(avg_rating), 2) AS avg_rating
+                                FROM Service_Providers sp
+                                LEFT JOIN (
+                                    SELECT service_Provider_Id, AVG(rating) AS avg_rating
+                                    FROM ratings 
+                                    GROUP BY service_Provider_Id
+                                ) r ON sp.id = r.service_Provider_Id
+                                WHERE sp.name LIKE :searchTerm
+                                GROUP BY sp.id
+                                LIMIT 5 OFFSET $currentOffset";
+    $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
+    $serviceProvidersStatement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
+    $serviceProvidersStatement->execute();
+
+    $searchfocus = "autofocus";
+}
+
 if($_POST)
 {
     if (isset($_POST['servicesSearchButton'])) {
@@ -45,33 +76,11 @@ if($_POST)
         $serviceProviderHeader = "Service Providers";
         $serviceProviderDescription = "";
     }else if(isset($_POST['serviceProvidersResetButton'])){
-        $serviceProvidersQuery =   "SELECT sp.*, FORMAT(avg_rating, 2) AS avg_rating
-                                    FROM service_providers sp
-                                    LEFT JOIN (
-                                        SELECT service_Provider_Id, AVG(rating) AS avg_rating
-                                        FROM ratings
-                                        GROUP BY service_Provider_Id
-                                    ) r ON sp.id = r.service_Provider_Id
-                                    ORDER BY sp.name ASC";
-        $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
-        $serviceProvidersStatement->execute(); 
-        $serviceProviderHeader = "Service Providers";
-        $serviceProviderDescription = "";
-        $searchfocus = "autofocus";
+        header("Location: index.php");
     }else if (isset($_POST['serviceProvidersSearchButton'])) {
         $searchTerm = filter_input(INPUT_POST, 'serviceProvidersSearchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-    
-        $serviceProvidersQuery =   "SELECT *, FORMAT(AVG(avg_rating), 2) AS avg_rating
-                                    FROM Service_Providers sp
-                                    LEFT JOIN (
-                                        SELECT service_Provider_Id, AVG(rating) AS avg_rating
-                                        FROM ratings 
-                                        GROUP BY service_Provider_Id
-                                    ) r ON sp.id = r.service_Provider_Id
-                                    WHERE sp.name LIKE :searchTerm";
-        $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
-        $serviceProvidersStatement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
-        $serviceProvidersStatement->execute();
+
+        header("Location: index.php?searchTerm=". $searchTerm);
     } else if (isset($_POST['sort'])) {
         $sortOrder;
          
@@ -255,7 +264,24 @@ $findBannerServiceProvider = function($imageId) use ($db) {
                         </tr>
                     <?php endwhile ?> 
                 </table>
-            <?php endif?>
+                <div class="pageNav">
+                <?php if($totalPage > 5 && !(isset($_POST['sortServiceProviderButton']))):?>
+                    <?php $previous =  $currentOffset - 5?>
+                    <?php if($previous >= 0):?>
+                        <a href="index.php?page=<?=$previous?>&searchTerm=<?=$searchTerm?>">Previous</a>
+                    <?php endif?>
+                    <?php for($i=0; $i<$totalPage ; $i+=5):?>
+                        <a href="index.php?page=<?=$i?>&searchTerm=<?=$searchTerm?>"><?=$pageNumber?></a>
+                        <?php $pageNumber++?>
+                    <?php endfor?>
+                    <?php $next =  $currentOffset + 5?>
+                    <?php if($next < $totalPage):?>
+                        <a href="index.php?page=<?=$next?>&searchTerm=<?=$searchTerm?>">Next</a>
+                    <?php endif?>
+                <p><?= $totalPage%5?> search results out of <?= $totalPage ?> results.</p>
+                <?php endif?>
+                <?php endif?>
+                </div>
         </section>
     </div>
 </div>

@@ -10,17 +10,20 @@ if(isset($_GET['id']))
 {
     $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
 
-    $accountQuery = "SELECT * FROM accounts WHERE user_Name = :userName";
-    $accountStatement = $db->prepare($accountQuery);
-    $accountStatement->bindValue(':userName', $_SESSION['userName']);
-    $accountStatement->execute();
-    $account = $accountStatement->fetch();
+    if(isset($_SESSION['userName']))
+    {
+        $accountQuery = "SELECT * FROM accounts WHERE user_Name = :userName";
+        $accountStatement = $db->prepare($accountQuery);
+        $accountStatement->bindValue(':userName', $_SESSION['userName']);
+        $accountStatement->execute();
+        $account = $accountStatement->fetch();
 
-    $customerRateQuery = "SELECT * FROM ratings WHERE customer_Id = :customer_Id AND service_Provider_Id = :service_Provider_Id";
-    $customerRateStatement = $db->prepare($customerRateQuery);
-    $customerRateStatement->bindValue(":service_Provider_Id", $id);
-    $customerRateStatement->bindValue(":customer_Id", $account['customer_Id']);
-    $customerRateStatement->execute();
+        $customerRateQuery = "SELECT * FROM ratings WHERE customer_Id = :customer_Id AND service_Provider_Id = :service_Provider_Id";
+        $customerRateStatement = $db->prepare($customerRateQuery);
+        $customerRateStatement->bindValue(":service_Provider_Id", $id);
+        $customerRateStatement->bindValue(":customer_Id", $account['customer_Id']);
+        $customerRateStatement->execute();
+    }
 
     $query = "SELECT * FROM service_providers WHERE id = :id";
     $statement = $db->prepare($query);
@@ -119,7 +122,7 @@ if(isset($_POST['rate'])){
                     <p>Email address: <?= $serviceProvider['email_Address']?></p>
                 </div>
             </div>
-            <?php if(($customerRateStatement->rowCount() > 0)):?>
+            <?php if((isset($_SESSION['userName']) && $customerRateStatement->rowCount() > 0)):?>
                 <?php $customerRateRow = $customerRateStatement->fetch()?>
                 <p>You rated it<?=$customerRateRow['rating']?> ⭐</p>
             <?php else:?>
