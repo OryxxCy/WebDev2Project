@@ -54,7 +54,7 @@ if ($_POST) {
     <div class ="formBox"> 
         <?php if(isset($_SESSION['userName'])):?>
             <?php if($_SESSION['type'] == 'admin'):?>
-                <a href="admin.php">Back</a>
+                <a href="edit_service_providers.php?id=<?=$id?>">Back</a>
             <?php elseif($_SESSION['type'] == 'service provider'):?>
                 <a href="edit_service_providers.php?id=<?=$id?>">Back</a>
             <?php endif?>

@@ -121,10 +121,18 @@ if(isset($_GET['table'])){
     $statement = $db->prepare($query);
     $statement->execute(); 
 
-    if (isset($_POST['sortButton'])) {
+    if (isset($_POST['servicesSearchButton'])) {
         $searchTerm = filter_input(INPUT_POST, 'servicesSearchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
-        $query = "SELECT * FROM service_providers WHERE name LIKE :searchTerm";
+        $query =   "SELECT sp.*, FORMAT(avg_rating, 2) AS avg_rating
+                FROM service_providers sp
+                LEFT JOIN (
+                    SELECT service_Provider_Id, AVG(rating) AS avg_rating
+                    FROM ratings
+                    GROUP BY service_Provider_Id
+                ) r ON sp.id = r.service_Provider_Id
+                WHERE name LIKE :searchTerm
+                ORDER BY $sortOrder";
         $statement = $db->prepare($query);
         $statement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
         $statement->execute();

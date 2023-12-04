@@ -23,6 +23,18 @@ if(isset($_GET['id']))
         $customerRateStatement->bindValue(":service_Provider_Id", $id);
         $customerRateStatement->bindValue(":customer_Id", $account['customer_Id']);
         $customerRateStatement->execute();
+
+        $selectedServiceQuery = "SELECT * FROM service_providers_services WHERE service_Provider_Id = :currentServiceProviderId";
+        $selectedServiceStatement = $db->prepare($selectedServiceQuery);
+        $selectedServiceStatement->bindValue(':currentServiceProviderId', $id, PDO::PARAM_INT);
+        $selectedServiceStatement->execute();
+        $selectedServiceRow = $selectedServiceStatement->fetch();
+
+        $selectedServiceNameQuery = "SELECT * FROM services WHERE id = :selectedServiceId";
+        $selectedServiceNameStatement = $db->prepare($selectedServiceNameQuery);
+        $selectedServiceNameStatement->bindValue(':selectedServiceId', $selectedServiceRow['service_Id'], PDO::PARAM_INT);
+        $selectedServiceNameStatement->execute(); 
+        $selectedServiceName = $selectedServiceNameStatement->fetch();
     }
 
     $query = "SELECT * FROM service_providers WHERE id = :id";
@@ -120,6 +132,7 @@ if(isset($_POST['rate'])){
                     <p>Location: <?= $serviceProvider['location']?></p>
                     <p>Phone Number: <?= $serviceProvider['phone_Number']?></p>
                     <p>Email address: <?= $serviceProvider['email_Address']?></p>
+                    <p>Service : <?=$selectedServiceName['name']?> Price : $<?=$selectedServiceRow['price']?></p>
                 </div>
             </div>
             <?php if((isset($_SESSION['userName']) && $customerRateStatement->rowCount() > 0)):?>

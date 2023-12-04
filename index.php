@@ -4,7 +4,7 @@ require('connect.php');
 session_start();
 
 $nameSelected = "";
-$dateSelected = "";
+$locationSelected = "";
 $rateSelected = "";
 $sortfocus = "";
 $searchfocus = "";
@@ -89,9 +89,9 @@ if($_POST)
                  $sortOrder = "name ASC"; 
                  $nameSelected = "selected";
                  break;
-             case "date":
-                 $sortOrder = "creation_Date ASC"; 
-                 $dateSelected = "selected";
+             case "location":
+                 $sortOrder = "location ASC"; 
+                 $locationSelected = "selected";
                  break;
              case "rating":
                  $sortOrder =   "avg_rating DESC";
@@ -219,8 +219,8 @@ $findBannerServiceProvider = function($imageId) use ($db) {
                 <label for="sort">Sort by:</label>
                 <select name="sort" id="sort" <?= $sortfocus?>>
                     <option value="name" <?= $nameSelected?>>Name</option>
-                    <option value="date" <?= $dateSelected?>>Created Date</option>
-                    <option value="rating" <?= $rateSelected?>>Rating</option>
+                    <option value="location" <?= $locationSelected?>>Location</option>
+                    <option value="rating" <?= $rateSelected?>>Rate</option>
                 </select>
                 <button type="submit" name="sortServiceProviderButton">Sort</button>
                 <input type="text" name="serviceProvidersSearchTerm" placeholder="Search for a service provider" <?=$searchfocus?>>
@@ -256,7 +256,7 @@ $findBannerServiceProvider = function($imageId) use ($db) {
                                 <?=$serviceProviderRow['email_Address']?>
                             </td>
                             <td>
-                                <?=$serviceProviderRow['creation_Date']?>
+                                <?=$serviceProviderRow['location']?>
                             </td>
                             <td>
                                 <?= $serviceProviderRow['avg_rating'] !== null ? $serviceProviderRow['avg_rating'] . '⭐' : 'Not rated' ?>
@@ -278,7 +278,7 @@ $findBannerServiceProvider = function($imageId) use ($db) {
                     <?php if($next < $totalPage):?>
                         <a href="index.php?page=<?=$next?>&searchTerm=<?=$searchTerm?>">Next</a>
                     <?php endif?>
-                <p><?= $totalPage%5?> search results out of <?= $totalPage ?> results.</p>
+                <p><?=$totalPage?> search results.</p>
                 <?php endif?>
                 <?php endif?>
                 </div>

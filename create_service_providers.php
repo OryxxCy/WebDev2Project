@@ -196,6 +196,17 @@ function file_is_a_valid_type($temporary_path, $new_path) {
                 </p>
                 <p class = "errorMessage"><?= $imageError?></p>
                 <p>
+                <p>
+                <label for="service">Service</label>
+                <select name="service" id="service">
+                    <?php while($serviceRow = $serviceStatement->fetch()):?>
+                    <option value="<?= $serviceRow['name']?>"><?= $serviceRow['name']?></option>
+                    <?php endwhile?>
+                </select>
+                <a href="create_services.php">Add New Service</a>
+                <label for="price">Service Price</label> 
+                <input name="price" type ="number" id="price">
+                </p>    
                 <label for="name">Service Provider Name</label>
                 <input name="name" id="name">
                 </p>
@@ -214,17 +225,6 @@ function file_is_a_valid_type($temporary_path, $new_path) {
                 <p>
                 <label for="email">Email Address</label>
                 <input name="email" id="email">
-                </p>
-                <p>
-                <label for="service">Service</label>
-                <select name="service" id="service">
-                    <?php while($serviceRow = $serviceStatement->fetch()):?>
-                    <option value="<?= $serviceRow['name']?>"><?= $serviceRow['name']?></option>
-                    <?php endwhile?>
-                </select>
-                <a href="create_services.php">Add New Service</a>
-                <label for="price">Service Price</label> 
-                <input name="price" type ="number" id="price">
                 </p>
                 <p>
                 <label for="userName">User Name</label>
