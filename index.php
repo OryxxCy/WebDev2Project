@@ -132,8 +132,6 @@ if($_POST)
     }
 }
 
-
-
 //
 $findServiceProvider = function($selectedServiceProviderId) use ($db)  {
     $selectedServiceProviderQuery = "SELECT * FROM service_providers WHERE id = :selectedServiceProviderId";

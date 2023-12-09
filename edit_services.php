@@ -63,7 +63,7 @@ if ($_POST && isset($_GET['id'])) {
 </head>
 <body>
     <div id="container">
-    <?php include('adminNavigation.php')?>
+    <div class ="formBox"> 
         <ul id="menu">
             <li><a href="admin.php">Back</a></li>
             <li><a href="create_services.php">Create New</a></li>
@@ -85,6 +85,7 @@ if ($_POST && isset($_GET['id'])) {
             </p>
         </form>
         </div>  
+    </div> 
     </div>  
 </body>
 </html>
