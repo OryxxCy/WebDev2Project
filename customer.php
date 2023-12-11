@@ -4,7 +4,7 @@ require('connect.php');
 
 session_start();
 
-if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT))
+if($id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT))
 {
     $query = "SELECT * FROM customers WHERE id = :id";
     $statement = $db->prepare($query);

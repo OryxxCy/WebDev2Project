@@ -42,11 +42,11 @@ if ($_POST) {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="style.css">
     <title>Login</title>
 </head>
 <body>
@@ -57,10 +57,10 @@ if ($_POST) {
                 <h2>Login</h2>
                 <form method="post">
                     <label for="userName">Username:</label>
-                    <input type="text" name="userName">
+                    <input type="text" id="userName" name="userName">
                     <label for="password">Password:</label>
                     <input type="password" name="password">
-                    <input type="submit" value="Login">
+                    <input type="submit" id="password" value="Login">
                     <p><?= $message?></p>
                 </form>
             <?php else:?>

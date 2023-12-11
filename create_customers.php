@@ -10,12 +10,18 @@ if (isset($_SESSION['userName'])) {
     }
 }
 
+$nameError = "";
+$phoneNumberError = "";
 $userNameError = "";
 $passwordError = "";
 $noError = true;
 
 if ($_POST) {
     $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $passwordInput = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $confirmPassword = filter_input(INPUT_POST, 'confirmPassword', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_NUMBER_INT);
 
     $query = "SELECT * FROM accounts WHERE user_Name = :userName";
     $statement = $db->prepare($query);
@@ -23,35 +29,49 @@ if ($_POST) {
     $statement->execute();
     $unavailableAccount = $statement->fetch();
 
-    if(trim($_POST['password']) == null || trim($_POST['confirmPassword']) == null){
-        $passwordError = "Do not leave the password empty.";
-        $noError = false;
-    }else if($_POST['password'] !=  $_POST['confirmPassword']) {
+    if($passwordInput !=  $confirmPassword) {
         $passwordError = "The passwords do not match.";
+        $noError = false;
+    }else if (strlen($passwordInput) < 5 || strlen($passwordInput) > 30){
+        $passwordError = "The password length must be 5 to 30 characters.";
         $noError = false;
     }
 
-    if(trim($_POST['userName']) == ''){
+    if(trim($userName) == ''){
         $userNameError = "Please dont leave the username empty.";
         $noError = false;
     }else if($unavailableAccount){
         $userNameError = "Username is taken please select a different one.";
         $noError = false;
+    }else if (strlen($userName) > 50){
+        $passwordError = "Use a user name that is less than 50 Characters.";
+        $noError = false;
     }
-    
+
+    if(trim($name) == ''){
+        $nameError = "Please dont leave the name empty.";
+        $noError = false;
+    }else if (strlen($name) > 50){
+        $nameError = "Input a name that is less than 50 Characters.";
+        $noError = false;
+    }
+
+    if(!(strlen(trim($phoneNumber)) == 10)){
+        $phoneNumberError = "Phone number length invalid. It must be 10 digits.";
+        $noError = false;
+    }
+
     if($noError){
-            $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-            $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $formattedPhoneNumber = '(' . substr($phoneNumber, 0, 3) . ') ' . substr($phoneNumber, 3, 3) . '-' . substr($phoneNumber, 6);
 
             $query = "INSERT INTO customers (name, phone_Number) VALUES (:name, :phoneNumber)";
             $statement = $db->prepare($query);
-
             $statement->bindValue(":name", $name);
-            $statement->bindValue(":phoneNumber", $phoneNumber);
+            $statement->bindValue(":phoneNumber", $formattedPhoneNumber);
             
         if($statement->execute()){
             $id = $db->lastInsertId();
-            $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            $password = password_hash($passwordInput, PASSWORD_DEFAULT);
             $type = "customer";
 
             $query = "INSERT INTO accounts (user_Name, password, type, customer_Id) VALUES (:userName, :password, :type, :id)";
@@ -60,7 +80,7 @@ if ($_POST) {
             $statement->bindValue(":userName", $userName);
             $statement->bindValue(":password", $password);
             $statement->bindValue(":type", $type);
-            $statement->bindValue(":id", $id);
+            $statement->bindValue(":id", $id, PDO::PARAM_INT);
 
             if($statement->execute()){
                 if($_SESSION['type'] == 'admin')
@@ -101,10 +121,12 @@ if ($_POST) {
                 <label for="name">Customer Name</label>
                 <input name="name" id="name">
                 </p>
+                <p class = "errorMessage"><?= $nameError?></p>
                 <p>
                 <label for="phoneNumber">Phone number</label>
-                <input name="phoneNumber" id="phoneNumber">
+                <input type="number" name="phoneNumber" id="phoneNumber">
                 </p>
+                <p class = "errorMessage"><?= $phoneNumberError?></p>
                 <p>
                 <label for="userName">User Name</label>
                 <input name="userName" id="userName">

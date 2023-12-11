@@ -6,10 +6,8 @@ session_start();
 
 $ratingError ="";
 
-if(isset($_GET['id']))
+if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT))
 {
-    $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
-
     if(isset($_SESSION['userName']))
     {
         $accountQuery = "SELECT * FROM accounts WHERE user_Name = :userName";
@@ -216,17 +214,18 @@ $findBannerCustomer = function($customerId) use ($db) {
     <div class="serviceProviderPage">
         <form method="post">
         <?php while($comments = $commentStatement->fetch()): ?>
-            <section class="formBox">
+            <div class="comments">
             <p>
-                Commented by:   <?=$findBannerCustomer($comments['customer_Id'])?>
-                at <?=$comments['timeStamp']?>
+                <a href="comment.php?id=<?=$comments['id']?>&serviceProviderId=<?=$id?>">Commented by: <?=$findBannerCustomer($comments['customer_Id'])?>
+                at <?=$comments['timeStamp']?></a>
             </p>
             <p>
                 <?= $comments['comment']?>
             </p>
-            </section>
+            </div>
         <?php endwhile?> 
-            <section class="formBox">
+        <?php if(isset($_SESSION['userName']) && $_SESSION['type'] == 'customer'):?>
+            <div class="formBox">
                 <p>
                     <label for="comment">Add a comment</label>
                     <textarea name="comment" id="comment"></textarea>
@@ -234,7 +233,8 @@ $findBannerCustomer = function($customerId) use ($db) {
                 <p>
                     <button type="submit" name="commentButton">Post</button>
                 </p>  
-            </section>         
+            </div>   
+        <?php endif?>      
         </form>
     </div>
     </div>

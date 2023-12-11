@@ -3,20 +3,29 @@
 require('connect.php');
 session_start();
 
-$serviceError = "";
-$serviceDescriptionError = "";
+$nameError = "";
+$descriptionError = "";
 $noError = true;
 
 $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
 
 if ($_POST) {
-    if(trim($_POST['name']) == null || trim($_POST['name']) == null){
-        $serviceError = "Do not leave the service name empty.";
+    $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+
+    if(trim($name) == ''){
+        $nameError = "Please dont leave the name empty.";
+        $noError = false;
+    }else if (strlen($name) > 50){
+        $nameError = "Input a name that is less than 50 Characters.";
         $noError = false;
     }
 
-    if(trim($_POST['description']) == null || trim($_POST['description']) == null){
-        $serviceDescriptionError = "Do not leave the service description empty.";
+    if(trim($description) == ''){
+        $descriptionError = "Please dont leave the description empty.";
+        $noError = false;
+    }else if (strlen($description) > 500){
+        $descriptionError = "Description must be less than 500 Characters.";
         $noError = false;
     }
 
@@ -68,12 +77,12 @@ if ($_POST) {
                     <label for="name">Service Name</label>
                     <input name="name" id="name">
                     </p>
-                    <p class = "errorMessage"><?=$serviceError?></p>
+                    <p class = "errorMessage"><?=$nameError?></p>
                     <p>
                     <label for="description">Description</label>
                     <textarea name="description" id="description"></textarea>
                     </p>
-                    <p class = "errorMessage"><?=$serviceDescriptionError?></p>
+                    <p class = "errorMessage"><?=$descriptionError?></p>
                     <p>
                     <input type="submit" value="Create">
                     </p>

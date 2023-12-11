@@ -8,22 +8,51 @@ if (!isset($_SESSION['userName'])) {
     exit();
 }
 
-if ($_POST && isset($_GET['id'])) {
-    $id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT);
+$nameError = "";
+$descriptionError = "";
+$noError = true;
+
+if($id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT)){
+    $query = "SELECT * FROM services WHERE id = :id";
+    $statement = $db->prepare($query);
+    $statement->bindValue(':id', $id, PDO::PARAM_INT);
+    
+    $statement->execute();
+    $row = $statement->fetch();
+}else{
+    header("Location: admin.php?table=services&column=name");
+}
+
+
+if ($_POST) {
     $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
     $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
     if($_POST['command'] == 'Update'){
-        if(trim($_POST['name']) == null){
-            header("Location: error.php");
-        }else{
+        if(trim($name) == ''){
+            $nameError = "Please dont leave the name empty.";
+            $noError = false;
+        }else if (strlen($name) > 50){
+            $nameError = "Input a name that is less than 50 Characters.";
+            $noError = false;
+        }
+
+        if(trim($description) == ''){
+            $descriptionError = "Please dont leave the description empty.";
+            $noError = false;
+        }else if (strlen($description) > 500){
+            $descriptionError = "Description must be less than 500 Characters.";
+            $noError = false;
+        }
+
+        if($noError){
             $query = "UPDATE services SET name = :name, description = :description WHERE id = :id";
     
             $statement = $db->prepare($query);
             $statement->bindValue(':id', $id, PDO::PARAM_INT);
             $statement->bindValue(":name", $name);
             $statement->bindValue(":description", $description);
-           
+        
             $statement->execute();
 
             header("Location: admin.php?table=services&column=name");
@@ -38,18 +67,7 @@ if ($_POST && isset($_GET['id'])) {
 
         header("Location: admin.php?table=services&column=name");
     }
-} else if (isset($_GET['id'])) { 
-    if($id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_NUMBER_INT)){
-        $query = "SELECT * FROM services WHERE id = :id";
-        $statement = $db->prepare($query);
-        $statement->bindValue(':id', $id, PDO::PARAM_INT);
-        
-        $statement->execute();
-        $row = $statement->fetch();
-    }else{
-        header("Location: admin.php?table=services&column=name");
-    }
-} 
+}
 ?>
 
 <!DOCTYPE html>
@@ -75,14 +93,14 @@ if ($_POST && isset($_GET['id'])) {
                 <label for="name">Service Name</label>
                 <input name="name" id="name" value="<?= $row['name']?>">
                 </p>
+                <p class = "errorMessage"><?=$nameError?></p>
                 <p>
                 <label for="description">Description</label>
                 <textarea name="description" id="description"><?= $row['description']?></textarea>
                 </p>
-                <input type="hidden" name="id" value="<?= $row['id'] ?>">
+                <p class = "errorMessage"><?=$descriptionError?></p>
                 <input type="submit" name="command" value="Update">
                 <input type="submit" name="command" value="Delete" onclick="return confirm('Are you sure you wish to delete this?')">
-            </p>
         </form>
         </div>  
     </div> 

@@ -14,8 +14,7 @@ $dateSelected = "";
 $rateSelected = "";
 $phoneNumberSelected ="";
 
-if(isset($_GET['table'])){
-    $table = filter_input(INPUT_GET, 'table', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+if($table = filter_input(INPUT_GET, 'table', FILTER_SANITIZE_FULL_SPECIAL_CHARS)){
     $sortOrder = "name ASC";
 
     if(isset($_POST['sort']))
@@ -145,7 +144,7 @@ if(isset($_GET['table'])){
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="style.css">
     <title>Admin</title>
 </head>
 <body>
@@ -180,7 +179,7 @@ if(isset($_GET['table'])){
                 </form>
             </section>
             <a href="create_<?=$table?>.php">Create new</a>
-            <section>
+            <div>
                 <form method="post">
                     <table>
                     <?php if($table == 'service_providers'):?>
@@ -198,7 +197,7 @@ if(isset($_GET['table'])){
                                     <a href="edit_<?=$table?>.php?id=<?=$row['id']?>">Edit or Delete</a>
                                 </td>
                                 <td>
-                                    <?=$row['name']?></a>
+                                    <a href="serviceProvider.php?id=<?=$row['id']?>"><?=$row['name']?></a>
                                 </td>
                                 <td>
                                     <?=$row['phone_Number']?>
@@ -227,7 +226,7 @@ if(isset($_GET['table'])){
                                     <a href="edit_<?=$table?>.php?id=<?=$row['id']?>">Edit or Delete</a>
                                 </td>
                                 <td>
-                                    <?=$row['name']?></a>
+                                    <a href="customer.php?id=<?=$row['id']?>"><?=$row['name']?></a>
                                 </td>
                                 <td>
                                     <?=$row['phone_Number']?>
@@ -249,7 +248,7 @@ if(isset($_GET['table'])){
                                     <a href="edit_<?=$table?>.php?id=<?=$row['id']?>">Edit or Delete</a>
                                 </td>
                                 <td>
-                                    <?=$row['name']?></a>
+                                    <?=$row['name']?>
                                 </td>
                                 <td>
                                     <?=$row['description']?>
@@ -259,7 +258,7 @@ if(isset($_GET['table'])){
                     <?php endif?>  
                     </table>
                 </form>   
-            </section>
+            </div>
         </div>
     </div>
     <?php else:?>

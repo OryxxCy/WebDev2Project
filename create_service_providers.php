@@ -11,6 +11,12 @@ if (isset($_SESSION['userName'])) {
     } 
 }
 
+$priceError = "";
+$nameError = "";
+$phoneNumberError = "";
+$emailError = "";
+$descriptionError = "";
+$locationError = "";
 $imageError = "";
 $userNameError = "";
 $passwordError = "";
@@ -22,6 +28,14 @@ $serviceStatement->execute();
 
 if ($_POST) {
     $userName = filter_input(INPUT_POST, 'userName', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $passwordInput = filter_input(INPUT_POST, 'password', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $confirmPassword = filter_input(INPUT_POST, 'confirmPassword', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $location = filter_input(INPUT_POST, 'location', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+    $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_NUMBER_INT);
+    $email = filter_input(INPUT_POST, 'email', FILTER_VALIDATE_EMAIL);
+    $price = filter_input(INPUT_POST, 'price', FILTER_SANITIZE_NUMBER_INT);
 
     $query = "SELECT * FROM accounts WHERE user_Name = :userName";
     $statement = $db->prepare($query);
@@ -29,19 +43,61 @@ if ($_POST) {
     $statement->execute();
     $unavailableAccount = $statement->fetch();
 
-    if(trim($_POST['password']) == null || trim($_POST['confirmPassword']) == null){
-        $passwordError = "Do not leave the password empty.";
-        $noError = false;
-    }else if($_POST['password'] !=  $_POST['confirmPassword']) {
+    if($passwordInput !=  $confirmPassword) {
         $passwordError = "The passwords do not match.";
+        $noError = false;
+    }else if (strlen($passwordInput) < 5 || strlen($passwordInput) > 30){
+        $passwordError = "The passwords length is invalid please use a password with a length of 5 to 30 characters.";
         $noError = false;
     }
 
-    if(trim($_POST['userName']) == ''){
+    if(trim($price) == ''){
+        $priceError = "Price must not be empty.";
+        $noError = false;
+    }
+
+    if(trim($userName) == ''){
         $userNameError = "Please dont leave the username empty.";
         $noError = false;
     }else if($unavailableAccount){
         $userNameError = "Username is taken please select a different one.";
+        $noError = false;
+    }else if (strlen($userName) > 50){
+        $passwordError = "Use a user name that is less than 50 Characters.";
+        $noError = false;
+    }
+
+    if(trim($name) == ''){
+        $nameError = "Please dont leave the name empty.";
+        $noError = false;
+    }else if (strlen($name) > 50){
+        $nameError = "Input a name that is less than 50 Characters.";
+        $noError = false;
+    }
+
+    if(trim($description) == ''){
+        $descriptionError = "Please dont leave the description empty.";
+        $noError = false;
+    }else if (strlen($description) > 500){
+        $descriptionError = "Description must be less than 500 Characters.";
+        $noError = false;
+    }
+
+    if(trim($location) == ''){
+        $locationError = "Please dont leave the location empty.";
+        $noError = false;
+    }else if (strlen($location) > 50){
+        $locationError = "Location must be less than 50 Characters.";
+        $noError = false;
+    }
+
+    if(!(strlen(trim($phoneNumber)) == 10)){
+        $phoneNumberError = "Phone number length invalid. It must be 10 digits.";
+        $noError = false;
+    }
+
+    if(!$email){
+        $emailError = "Invalid email";
         $noError = false;
     }
 
@@ -61,11 +117,7 @@ if ($_POST) {
     }
     
     if($noError){
-            $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-            $description = filter_input(INPUT_POST, 'description', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-            $location = filter_input(INPUT_POST, 'location', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-            $phoneNumber = filter_input(INPUT_POST, 'phoneNumber', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
-            $email = filter_input(INPUT_POST, 'email', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
+            $formattedPhoneNumber = '(' . substr($phoneNumber, 0, 3) . ') ' . substr($phoneNumber, 3, 3) . '-' . substr($phoneNumber, 6);
 
             $query = "INSERT INTO service_providers (name, description, location, phone_Number, email_Address) VALUES (:name, :description, :location, :phone_Number, :email_Address)";
             $statement = $db->prepare($query);
@@ -73,7 +125,7 @@ if ($_POST) {
             $statement->bindValue(":name", $name);
             $statement->bindValue(":description", $description);
             $statement->bindValue(":location", $location);
-            $statement->bindValue(":phone_Number", $phoneNumber);
+            $statement->bindValue(":phone_Number", $formattedPhoneNumber);
             $statement->bindValue(":email_Address", $email);
 
         if($statement->execute()){
@@ -88,12 +140,12 @@ if ($_POST) {
                 $query = "INSERT INTO service_providers_services (service_Id, service_Provider_Id, price) VALUES (:service_Id, :service_Provider_Id, :price)";
                 $statement = $db->prepare($query);
                 $statement->bindValue(":service_Id", $insertServiceRow['id']);
-                $statement->bindValue(":service_Provider_Id", $id);
-                $statement->bindValue(":price", $_POST['price']);
+                $statement->bindValue(":service_Provider_Id", $id, PDO::PARAM_INT);
+                $statement->bindValue(":price", $price);
                 $statement->execute();
             }
             
-            $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            $password = password_hash($passwordInput, PASSWORD_DEFAULT);
             $type = "service provider";
 
             $query = "INSERT INTO accounts (user_Name, password, type, service_Provider_Id) VALUES (:userName, :password, :type, :id)";
@@ -118,8 +170,8 @@ if ($_POST) {
                         $query = "UPDATE service_providers SET imageId = :bannerId WHERE Id = :id";
                         $statement = $db->prepare($query);
     
-                        $statement->bindValue(":bannerId", $bannerId); 
-                        $statement->bindValue(":id", $id);             
+                        $statement->bindValue(":bannerId", $bannerId, PDO::PARAM_INT); 
+                        $statement->bindValue(":id", $id, PDO::PARAM_INT);             
                         
                         if($statement->execute()){
                             $image_filename =  $bannerId . $_FILES['bannerImage']['name'];
@@ -134,7 +186,7 @@ if ($_POST) {
                             $statement = $db->prepare($query);
                 
                             $statement->bindValue(":banner", $bannerPicturePath);
-                            $statement->bindValue(":bannerId", $bannerId);
+                            $statement->bindValue(":bannerId", $bannerId, PDO::PARAM_INT);
     
                             $statement->execute();
 
@@ -206,26 +258,33 @@ function file_is_a_valid_type($temporary_path, $new_path) {
                 <a href="create_services.php">Add New Service</a>
                 <label for="price">Service Price</label> 
                 <input name="price" type ="number" id="price">
-                </p>    
+                </p>
+                <p class = "errorMessage"><?= $priceError?></p>    
+                <p>
                 <label for="name">Service Provider Name</label>
                 <input name="name" id="name">
                 </p>
+                <p class = "errorMessage"><?= $nameError?></p>
                 <p>
                 <label for="description">Description</label>
                 <textarea name="description" id="description"></textarea>
                 </p>
+                <p class = "errorMessage"><?= $descriptionError?></p>
                 <p>
                 <label for="location">Location</label>
                 <input name="location" id="location">
                 </p>
+                <p class = "errorMessage"><?= $locationError?></p>
                 <p>
                 <label for="phoneNumber">Phone Number</label>
-                <input name="phoneNumber" id="phoneNumber">
+                <input type="number" name="phoneNumber" id="phoneNumber">
                 </p>
+                <p class = "errorMessage"><?= $phoneNumberError?></p>
                 <p>
                 <label for="email">Email Address</label>
                 <input name="email" id="email">
                 </p>
+                <p class = "errorMessage"><?= $emailError?></p>
                 <p>
                 <label for="userName">User Name</label>
                 <input name="userName" id="userName">

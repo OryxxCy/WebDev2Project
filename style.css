@@ -5,7 +5,7 @@
 
 body {
     font-family: 'Arial', sans-serif;
-    background-color: #344658;
+    background-color: #132238;
     color: #fff;
 }
 
@@ -13,7 +13,7 @@ body {
     max-width: 80%;
     height: 100vh;
     margin: auto;
-    background-color: #344658;
+    background-color: #132238;
     padding-top: 20px;
 }
 
@@ -22,51 +22,6 @@ body {
     flex-direction: column;
     gap: 20px;
 }
-
-/* Slider */
-.slider-wrapper{
-    position: relative;
-    max-width: 48rem;
-    margin: 0 auto;
-}
-
-.slider{
-    display: flex;
-    overflow-x: auto;
-    scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
-    border-radius: 0.5rem;
-    overflow-x: hidden;
-}
-
-.slider-nav a{
-    width: 0.5rem;
-    height: 0.5rem;
-    border-radius: 50%;
-    background-color: lightskyblue;
-    opacity: 0.75;
-    transition: opacity ease 250ms;
-}
-
-.slider-nav {
-    display: flex;
-    column-gap: 1rem;
-    position: absolute;
-    bottom: 1.25rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 1;
-}
-
-.slider-nav a :hover{
-    opacity: 100%;
-}
-
-.slider img{
-    scroll-snap-align: start;
-    width: 100%;
-}
-
 
 #about, .sectionBox, .serviceProviderPage {
     padding: 20px;
@@ -218,4 +173,17 @@ a {
 .pageNav{
     text-align: center;
     margin-top: 10px;
+}
+
+.comments{
+    max-width: 100%;
+    background-color: #3a4a5a;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px #efe6e6;
+}
+
+.comments p{
+    padding :20px;
 }

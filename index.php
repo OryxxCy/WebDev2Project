@@ -14,7 +14,6 @@ $pageNumber = 1;
 $totalPage = 0;
 
 $serviceProviderHeader = "Service Providers";
-$serviceProviderDescription = "";
 $slideNum = 1;
 
 $query = "SELECT * FROM services";
@@ -32,10 +31,6 @@ $serviceProvidersQuery =   "SELECT sp.*, FORMAT(avg_rating, 2) AS avg_rating
 
 $serviceProvidersStatement = $db->prepare($serviceProvidersQuery);
 $serviceProvidersStatement->execute(); 
-
-$imagesQuery = "SELECT * FROM images LIMIT 4";
-$imagesStatement = $db->prepare($imagesQuery);
-$imagesStatement->execute(); 
 
 $searchTerm = filter_input(INPUT_GET, 'searchTerm', FILTER_SANITIZE_FULL_SPECIAL_CHARS);
 
@@ -74,7 +69,6 @@ if($_POST)
         $statement->bindValue(':searchTerm', '%' . $searchTerm . '%', PDO::PARAM_STR);
         $statement->execute();
         $serviceProviderHeader = "Service Providers";
-        $serviceProviderDescription = "";
     }else if(isset($_POST['serviceProvidersResetButton'])){
         header("Location: index.php");
     }else if (isset($_POST['serviceProvidersSearchButton'])) {
@@ -127,42 +121,31 @@ if($_POST)
         $selectedServiceNameStatement->bindValue(':selectedServiceId', $selectedServiceId, PDO::PARAM_INT);
         $selectedServiceNameStatement->execute(); 
         $selectedServiceName = $selectedServiceNameStatement->fetch();
-        $serviceProviderHeader = $selectedServiceName['name'];
-        $serviceProviderDescription = $selectedServiceName['description'];
+        $serviceProviderHeader = $selectedServiceName['name'] . '-' . $selectedServiceName['description'];
     }
 }
 
-//
+/*
+*Retrieves a service provider information.
+*
+*Param comselectedServiceProviderIdment : the id of the service provider.
+*Return The name of the service provider.
+*/
 $findServiceProvider = function($selectedServiceProviderId) use ($db)  {
     $selectedServiceProviderQuery = "SELECT * FROM service_providers WHERE id = :selectedServiceProviderId";
     $selectedServiceProviderStatement = $db->prepare($selectedServiceProviderQuery);
     $selectedServiceProviderStatement->bindValue(':selectedServiceProviderId', $selectedServiceProviderId, PDO::PARAM_INT);
     $selectedServiceProviderStatement->execute();
     $selectedServiceProvider = $selectedServiceProviderStatement->fetch();
-
     return $selectedServiceProvider['name'];
 };
-
-//
-$findBannerServiceProvider = function($imageId) use ($db) {
-    $selectedImageQuery = "SELECT * FROM service_providers WHERE imageId = :imageId";
-    $selectedImageStatement = $db->prepare($selectedImageQuery);
-    $selectedImageStatement->bindValue(':imageId', $imageId, PDO::PARAM_INT);
-    $selectedImageStatement->execute();
-    $selectedSImage = $selectedImageStatement->fetch();
-
-    $serviceProviderPageLink = "serviceProvider.php?id=" . $selectedSImage['id'];
-
-    return $serviceProviderPageLink;
-}
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" type="text/css" href="style.css" />
+    <link rel="stylesheet" type="text/css" href="style.css">
     <title>Document</title>
 </head>
 <body>
@@ -171,48 +154,33 @@ $findBannerServiceProvider = function($imageId) use ($db) {
 <div id="content">
     <div id="about">
         <h2>About ServicesFinders</h2>
-        <section>
+        <div>
         <p>
             "ServicesFinders" is a business dedicated to simplifying theprocess of finding various services, including cleaning, plumbing,and electrical services. 
             The company's mission is to help users easily find the services they need in one convenient place. 
             This not only makes searching for services easier but also supports small localservice providers in getting noticed and building their businesses.
         </p>
-        </section>
+        </div>
     </div>
-    <section class="slider-wrapper">
-            <div class="slider">
-                <?php while($imageRow = $imagesStatement->fetch()): ?>
-                    <img id="slide-<?=$slideNum?>" src="<?=$imageRow['banner']?>" alt="Banner photo">
-                    <a class="slider-nav" href="<?=$findBannerServiceProvider($imageRow['id'])?>">LINK</a>
-                    <?php $slideNum++?>
-                <?php endwhile ?>
-                <div class="slider-nav">
-                <?php for($i = 1 ; $i < $slideNum; $i++): ?>
-                    <a href="#slide-<?=$i?>"></a>
-                <?php endfor?>
-                </div>
-            </div>
-        </section>
     <div class="sectionBox">
-        <section class="searchBar">
+        <div class="searchBar">
             <h2>Services</h2>
             <form method="post">
                 <input type="text" name="servicesSearchTerm" placeholder="Search for a service">
                 <button type="submit" name="servicesSearchButton">Search</button>
             </form>
-        </section>
-        <section>
+        </div>
+        <div>
             <form method="post">
                 <?php while($row = $statement->fetch()): ?>
                     <button type="submit" name="selectedServiceId" value="<?= $row['id'] ?>"><?=$row['name']?></button>
                 <?php endwhile ?>
             </form>   
-        </section>
+        </div>
     </div>
 
     <div class="sectionBox">
-        <section class="searchBar" >
-            <h2><?=$serviceProviderHeader?></h2>
+        <div class="searchBar" >
             <form method="post">
                 <label for="sort">Sort by:</label>
                 <select name="sort" id="sort" <?= $sortfocus?>>
@@ -225,9 +193,9 @@ $findBannerServiceProvider = function($imageId) use ($db) {
                 <button type="submit" name="serviceProvidersSearchButton">Search</button>
                 <button type="submit" name="serviceProvidersResetButton">Reset</button>
             </form>
-        </section>
-        <h3><?=$serviceProviderDescription?></h3>
-        <section>
+        </div>
+        <h2><?=$serviceProviderHeader?></h2>
+        <div>
             <?php if(isset($_POST['selectedServiceId'])):?>
                 <?php while($serviceProvidersServices = $selectedServiceStatement->fetch()): ?>
                     <p><a href="serviceProvider.php?id=<?=$serviceProvidersServices['service_Provider_Id']?>"><?=$findServiceProvider($serviceProvidersServices['service_Provider_Id'])?></a></p>
@@ -280,7 +248,7 @@ $findBannerServiceProvider = function($imageId) use ($db) {
                 <?php endif?>
                 <?php endif?>
                 </div>
-        </section>
+        </div>
     </div>
 </div>
 </div>
